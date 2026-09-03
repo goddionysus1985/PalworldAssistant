@@ -1,0 +1,25 @@
+{
+  "name": "Palworld Assistant — База знаний и калькулятор",
+  "short_name": "PalAssistant",
+  "description": "Офлайн гайд, калькулятор скрещивания, интерактивная карта, планировщик базы и база знаний по Palworld",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

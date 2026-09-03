@@ -486,30 +486,48 @@
   window.openPalModal = openPalModal;
   window.closePalModal = closePalModal;
 
-  // Автоматическая подсветка упоминаний палов в тексте
+  // Получение полного списка всех известных палов для динамической подсветки
+  function getAllPalNames() {
+    const set = new Set();
+    if (typeof PAL_DETAILS !== 'undefined') Object.keys(PAL_DETAILS).forEach(n => set.add(n));
+    if (typeof RU_TO_ENG !== 'undefined') Object.keys(RU_TO_ENG).forEach(n => set.add(n));
+    if (typeof DATA !== 'undefined') {
+      if (DATA.basePals) DATA.basePals.forEach(p => set.add(p.name));
+      if (DATA.combatPals) DATA.combatPals.forEach(p => set.add(p.name));
+    }
+    if (typeof DATA_EXT !== 'undefined') {
+      if (DATA_EXT.breedingPals) DATA_EXT.breedingPals.forEach(p => set.add(p.name));
+      if (DATA_EXT.specialBreeding) {
+        DATA_EXT.specialBreeding.forEach(s => {
+          if (s.parent1) set.add(s.parent1);
+          if (s.parent2) set.add(s.parent2);
+          if (s.result) set.add(s.result);
+        });
+      }
+    }
+    return Array.from(set).filter(n => n && n.length > 2).sort((a, b) => b.length - a.length);
+  }
+
+  // Автоматическая подсветка упоминаний палов в тексте и таблицах
   function enhanceTextPalLinks() {
-    const palNames = [
-      'Анубис', 'Джетрагон', 'Орсерк', 'Фросталлион', 'Фросталлион Нокт',
-      'Джормунтид', 'Джормунтид Игнис', 'Лилин', 'Беллануар', 'Бигарде',
-      'Некромус', 'Паладиус', 'Астогон', 'Вумпо', 'Вумпо Ботан', 'Гриззболт',
-      'Шэдоубик', 'Рэнджиши', 'Шаолонг', 'Дандилорд', 'Эгидрон', 'Солэнн',
-      'Сильванс', 'Эйдролон', 'Селесдир Нокт'
-    ];
-    const targets = document.querySelectorAll('.card p, .tip-box, .warn-box, td');
+    const palNames = getAllPalNames();
+    const targets = document.querySelectorAll('.card p, .tip-box, .warn-box, td, th, .pal-where, #breeding td');
     targets.forEach(node => {
       if (node.closest('#palModalOverlay') || node.querySelector('.pal-modal-card')) return;
       let html = node.innerHTML;
       let changed = false;
       palNames.forEach(name => {
-        const regex = new RegExp(`(?<![<\\/\\wА-Яа-яЁё])(${name})(?![\\wА-Яа-яЁё>]|[^<]*>)`, 'g');
+        const regex = new RegExp(`(?<![<\\/\\wА-Яа-яЁё-]|\b)(${name})(?![\\wА-Яа-яЁё-]|[^<]*>)`, 'g');
         if (regex.test(html)) {
-          html = html.replace(regex, `<span class="pal-text-link" data-pal="$1" title="Нажмите для открытия карточки $1">$1</span>`);
+          html = html.replace(regex, `<span class="pal-text-link" data-pal="$1" title="Открыть карточку $1">$1</span>`);
           changed = true;
         }
       });
       if (changed) node.innerHTML = html;
     });
   }
+
+  window.enhanceTextPalLinks = enhanceTextPalLinks;
 
   // Глобальное делегирование кликов по карточкам и упоминаниям палов
   document.addEventListener('DOMContentLoaded', () => {

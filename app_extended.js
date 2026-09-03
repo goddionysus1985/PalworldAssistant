@@ -36,7 +36,7 @@
   function insertTabsAndSections() {
     const main = qs('.main');
     const newSectionIds = [
-      'breeding-calc', 'map', 'food-calc', 'base-planner', 'tech-tree', 'bosses', 'gold'
+      'base-analyzer', 'merchants', 'breeding-calc', 'map', 'food-calc', 'base-planner', 'tech-tree', 'bosses', 'gold'
     ];
 
     newSectionIds.forEach(id => {
@@ -143,11 +143,11 @@
           <tbody>
             ${DATA_EXT.specialBreeding.map(s => `
             <tr>
-              <td><strong>${s.parent1}</strong></td>
+              <td><span class="pal-text-link" data-pal="${s.parent1}" title="Открыть карточку ${s.parent1}">${s.parent1}</span></td>
               <td style="color:var(--text2)">×</td>
-              <td><strong>${s.parent2}</strong></td>
+              <td><span class="pal-text-link" data-pal="${s.parent2}" title="Открыть карточку ${s.parent2}">${s.parent2}</span></td>
               <td style="color:var(--accent)">→</td>
-              <td><strong style="color:var(--accent)">${s.result}</strong></td>
+              <td><span class="pal-text-link" data-pal="${s.result}" title="Открыть карточку ${s.result}">${s.result}</span></td>
               <td style="color:var(--text2)">${s.note}</td>
             </tr>`).join('')}
           </tbody>

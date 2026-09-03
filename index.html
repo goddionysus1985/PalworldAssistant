@@ -9,7 +9,8 @@
   <title>Palworld Assistant — Гайды, база, боёвка и калькулятор</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="apple-touch-icon" href="favicon.svg" />
-  <link rel="stylesheet" href="styles.css?v=1.4.0" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css?v=1.5.0" />
 </head>
 <body>
 
@@ -70,6 +71,7 @@
 
     <!-- Категория: Палы -->
     <button class="tab-btn" data-tab="base" data-cat="pals"><span class="tab-emoji">🏡</span> База</button>
+    <button class="tab-btn" data-tab="base-analyzer" data-cat="pals"><span class="tab-emoji">🏰</span> Отряд базы</button>
     <button class="tab-btn" data-tab="combat" data-cat="pals"><span class="tab-emoji">⚔️</span> Боёвка</button>
     <button class="tab-btn" data-tab="passives" data-cat="pals"><span class="tab-emoji">✨</span> Пассивки</button>
     <button class="tab-btn" data-tab="bosses" data-cat="pals"><span class="tab-emoji">🎯</span> Боссы</button>
@@ -77,6 +79,7 @@
     <!-- Категория: Инструменты -->
     <button class="tab-btn" data-tab="breeding-calc" data-cat="tools"><span class="tab-emoji">🧮</span> Калькулятор</button>
     <button class="tab-btn" data-tab="map" data-cat="tools"><span class="tab-emoji">📍</span> Карта</button>
+    <button class="tab-btn" data-tab="merchants" data-cat="tools"><span class="tab-emoji">🛒</span> Торговцы</button>
     <button class="tab-btn" data-tab="food-calc" data-cat="tools"><span class="tab-emoji">🍽️</span> Еда</button>
     <button class="tab-btn" data-tab="base-planner" data-cat="tools"><span class="tab-emoji">🏗️</span> Планировщик</button>
 
@@ -255,6 +258,67 @@
           <tr><td>💎 Рубин дракона</td><td>Релакса (Relaxasaurus)</td><td>Редкий материал</td></tr>
         </tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       🏰 АНАЛИЗАТОР ОТРЯДА БАЗЫ
+       ====================================================== -->
+  <section class="section" id="base-analyzer">
+    <div class="section-header">
+      <h2>🏰 Анализатор & Оптимизатор отряда базы</h2>
+      <p>Проверь покрытие всех 12 профессий, найди узкие места и получи умные советы: кого заменить и кого поставить</p>
+    </div>
+
+    <!-- Пресеты -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+      <div style="font-size:12px;color:var(--text2);text-transform:uppercase;font-weight:700;letter-spacing:.5px;margin-bottom:8px">Быстрые пресеты отрядов:</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="sub-tab active" onclick="window._loadRosterPreset('balanced')">⚡ Универсальная база</button>
+        <button class="sub-tab" onclick="window._loadRosterPreset('food')">🎂 Ферма еды и Тортов</button>
+        <button class="sub-tab" onclick="window._loadRosterPreset('mining')">⛏️ Горнодобыча и производство</button>
+      </div>
+    </div>
+
+    <!-- Управление слотами базы -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <h3 style="margin:0;font-size:16px">Текущие рабочие вашей базы (<span id="rosterCount" style="color:var(--accent)">12 / 15</span>)</h3>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">Добавляйте или убирайте палов, чтобы оценить производительность</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="addPalSelect" style="padding:8px 12px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px">
+            <option value="">-- Выберите пала --</option>
+          </select>
+          <button class="sub-tab active" onclick="window._addRosterPal()" style="padding:8px 14px">+ Добавить</button>
+        </div>
+      </div>
+      <div id="baseRosterSlots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+        <!-- Генерируется через JS -->
+      </div>
+    </div>
+
+    <!-- Рекомендации по оптимизации -->
+    <div style="margin-bottom:24px">
+      <div class="section-header" style="margin-bottom:12px">
+        <h2>💡 Советы по замене и оптимизации</h2>
+        <p>Кого убрать и кого поставить, чтобы устранить узкие горлышки</p>
+      </div>
+      <div id="baseRecommendations">
+        <!-- Генерируется через JS -->
+      </div>
+    </div>
+
+    <!-- Матрица покрытия 12 работ -->
+    <div>
+      <div class="section-header" style="margin-bottom:12px">
+        <h2>📊 Покрытие 12 профессий базы</h2>
+        <p>Статус каждого направления: эффективность, максимальный уровень навыка и количество работников</p>
+      </div>
+      <div id="baseJobMatrix" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+        <!-- Генерируется через JS -->
+      </div>
     </div>
   </section>
 
@@ -648,18 +712,58 @@
     </div>
   </section>
 
+  <!-- ======================================================
+       🛒 СПРАВОЧНИК ТОРГОВЦЕВ ПАЛПАГОСА
+       ====================================================== -->
+  <section class="section" id="merchants">
+    <div class="section-header">
+      <h2>🛒 Справочник всех торговцев Палпагоса</h2>
+      <p>Где найти торговцев боеприпасами, сырьём, палами и подпольных Чёрных контрабандистов с координатами и ценами</p>
+    </div>
+
+    <!-- Поиск по товарам -->
+    <div style="margin-bottom:14px">
+      <input type="search" id="merchantsSearchInput" placeholder="🔍 Найти товар или патроны (например: кости, патроны, масло, томаты, медикаменты)..." 
+        style="width:100%;padding:13px 18px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.2)">
+    </div>
+
+    <!-- Фильтры торговцев -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+      <button class="sub-tab active" data-merchant-type="all">Все торговцы (8)</button>
+      <button class="sub-tab" data-merchant-type="red">🔴 Патроны и сырьё</button>
+      <button class="sub-tab" data-merchant-type="blue">🔵 Торговцы палами</button>
+      <button class="sub-tab" data-merchant-type="black">🏴‍☠️ Чёрные торговцы (Скупка)</button>
+    </div>
+
+    <!-- Сетка карточек торговцев -->
+    <div class="grid-2" id="merchantsContainer">
+      <!-- Генерируется через JS -->
+    </div>
+  </section>
+
 </main>
 
 <!-- Кнопка наверх -->
 <button id="backTop" title="Наверх">↑</button>
 
 <!-- Скрипты -->
-<script src="pal_images.js?v=1.4.0"></script>
-<script src="data.js?v=1.4.0"></script>
-<script src="data_extended.js?v=1.4.0"></script>
-<script src="app.js?v=1.4.0"></script>
-<script src="app_extended.js?v=1.4.0"></script>
-<script src="pal_modal.js?v=1.4.0"></script>
+<script src="pal_images.js?v=1.5.0"></script>
+<script src="data.js?v=1.5.0"></script>
+<script src="data_extended.js?v=1.5.0"></script>
+<script src="merchants_data.js?v=1.5.0"></script>
+<script src="base_analyzer.js?v=1.5.0"></script>
+<script src="app.js?v=1.5.0"></script>
+<script src="app_extended.js?v=1.5.0"></script>
+<script src="pal_modal.js?v=1.5.0"></script>
+
+<!-- PWA Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
 
 </body>
 </html>
