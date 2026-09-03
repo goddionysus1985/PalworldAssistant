@@ -230,7 +230,7 @@
     container.innerHTML = DATA.basePals.map(p => {
       const imgTag = (typeof palImgTag === 'function') ? palImgTag(p.eng, 72, p.name) : '';
       return `
-      <div class="pal-card" data-level="all" data-id="${p.id}">
+      <div class="pal-card" data-level="all" data-id="${p.id}" data-pal="${p.name}" title="Кликните, чтобы открыть карточку пала">
         <div class="pal-header" style="display:flex;align-items:flex-start;gap:12px">
           ${imgTag ? `<div style="flex-shrink:0">${imgTag}</div>` : ''}
           <div style="flex:1">
@@ -260,7 +260,7 @@
     container.innerHTML = DATA.combatPals.map(p => {
       const imgTag = (typeof palImgTag === 'function') ? palImgTag(p.eng, 80, p.name) : '';
       return `
-      <div class="combat-card" data-level="all" data-id="${p.id}">
+      <div class="combat-card" data-level="all" data-id="${p.id}" data-pal="${p.name}" title="Кликните, чтобы открыть карточку пала">
         <div class="combat-header" style="display:flex;align-items:center;gap:12px">
           ${imgTag || `<span class="combat-icon">${p.icon}</span>`}
           <div style="flex:1">
@@ -486,7 +486,7 @@
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               ${data.bestCounters.map(p => `
-                <div style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px">
+                <div data-pal="${p}" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer" title="Нажмите, чтобы открыть карточку ${p}">
                   ${typeof palImgTag === 'function' ? palImgTag(p, 24) : '🐾'}
                   <span>${p}</span>
                 </div>
@@ -503,7 +503,7 @@
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               ${data.avoidUsing.map(p => `
-                <div style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;opacity:0.85">
+                <div data-pal="${p}" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;opacity:0.85;cursor:pointer" title="Нажмите, чтобы открыть карточку ${p}">
                   ${typeof palImgTag === 'function' ? palImgTag(p, 24) : '⚠️'}
                   <span>${p}</span>
                 </div>

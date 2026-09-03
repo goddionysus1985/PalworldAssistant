@@ -206,16 +206,17 @@
     const best = top[0];
 
     out.innerHTML = `
-      <div style="background:var(--bg2);border:2px solid var(--accent);border-radius:12px;padding:20px;margin-bottom:16px;text-align:center">
+      <div data-pal="${best.name}" style="background:var(--bg2);border:2px solid var(--accent);border-radius:12px;padding:20px;margin-bottom:16px;text-align:center;cursor:pointer" title="Нажмите, чтобы открыть карточку ${best.name}">
         <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Мощь потомка: <strong style="color:var(--accent)">${childPower}</strong></div>
         <div style="margin-bottom:10px">${(typeof palImgTag === 'function') ? palImgTag(best.eng, 96, best.name) : '🌐'}</div>
         <div style="font-size:28px;font-weight:800;color:var(--text)">${best.name}</div>
         <div style="font-size:13px;color:var(--text2)">${best.eng} — Мощь: ${best.power}</div>
+        <div style="font-size:11px;color:var(--accent);margin-top:6px">👉 Нажмите для подробной карточки</div>
       </div>
       <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Ближайшие варианты:</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         ${top.map((p, i) => `
-        <div style="flex:1;min-width:180px;background:var(--bg3);border:1px solid ${i===0?'var(--accent)':'var(--border)'};border-radius:8px;padding:14px;text-align:center">
+        <div data-pal="${p.name}" style="flex:1;min-width:180px;background:var(--bg3);border:1px solid ${i===0?'var(--accent)':'var(--border)'};border-radius:8px;padding:14px;text-align:center;cursor:pointer" title="Нажмите, чтобы открыть карточку ${p.name}">
           <div style="margin-bottom:8px">${(typeof palImgTag === 'function') ? palImgTag(p.eng, 56, p.name) : ''}</div>
           <div style="font-weight:700;font-size:${i===0?'16px':'14px'}">${p.name}</div>
           <div style="font-size:11px;color:var(--text2)">${p.eng}</div>
@@ -989,10 +990,10 @@
                   const palData = (typeof DATA_EXT !== 'undefined' && DATA_EXT.breedingPals)
                     ? DATA_EXT.breedingPals.find(p => p.name === palName)
                     : null;
-                  const img = (palData && typeof palImgTag === 'function')
-                    ? palImgTag(palData.eng, 48, palName)
+                  const img = (typeof palImgTag === 'function')
+                    ? palImgTag((palData && palData.eng) ? palData.eng : palName, 48, palName)
                     : '';
-                  return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:70px">
+                  return `<div data-pal="${palName}" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:70px;cursor:pointer;transition:transform .15s" title="Нажмите, чтобы открыть карточку ${palName}">
                     ${img}
                     <span style="font-size:11px;color:var(--text2);text-align:center;line-height:1.3">${palName}</span>
                   </div>`;
