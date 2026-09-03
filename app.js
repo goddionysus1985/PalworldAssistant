@@ -12,15 +12,53 @@
 
   // --- DOM --------------------------------------------------
   const tabBtns       = document.querySelectorAll('.tab-btn');
+  const catBtns       = document.querySelectorAll('.cat-btn');
   const sections      = document.querySelectorAll('.section');
   const pills         = document.querySelectorAll('.pill');
   const searchInput   = document.getElementById('globalSearch');
+  const searchClearBtn= document.getElementById('searchClearBtn');
   const searchResults = document.getElementById('searchResults');
   const backTop       = document.getElementById('backTop');
+
+  let activeCat = 'guides';
+
+  // --- КАТЕГОРИИ -------------------------------------------
+  function switchCategory(cat, changeTab = true) {
+    activeCat = cat;
+    catBtns.forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+
+    let firstVisibleTab = null;
+    tabBtns.forEach(tab => {
+      const match = tab.dataset.cat === cat;
+      tab.style.display = match ? 'inline-flex' : 'none';
+      if (match && !firstVisibleTab) firstVisibleTab = tab.dataset.tab;
+    });
+
+    if (changeTab && firstVisibleTab) {
+      if (typeof window.switchAllExtended === 'function') {
+        window.switchAllExtended(firstVisibleTab);
+      } else {
+        switchTab(firstVisibleTab);
+      }
+    }
+  }
+
+  catBtns.forEach(btn => {
+    btn.addEventListener('click', () => switchCategory(btn.dataset.cat, true));
+  });
+
+  window._switchCategory = switchCategory;
 
   // --- ВКЛАДКИ ---------------------------------------------
   function switchTab(id) {
     activeTab = id;
+
+    // Синхронизация категории
+    const targetBtn = document.querySelector(`.tab-btn[data-tab="${id}"]`);
+    if (targetBtn && targetBtn.dataset.cat && targetBtn.dataset.cat !== activeCat) {
+      switchCategory(targetBtn.dataset.cat, false);
+    }
+
     tabBtns.forEach(b => {
       const isActive = b.dataset.tab === id;
       b.classList.toggle('active', isActive);
@@ -78,18 +116,37 @@
     ).slice(0, 8);
 
     if (!hits.length) {
-      searchResults.innerHTML = '<div class="sr-item"><div class="sr-title" style="color:var(--text2)">Ничего не найдено</div></div>';
+      searchResults.innerHTML = '<div class="sr-item"><div class="sr-content"><div class="sr-title" style="color:var(--text2)">Ничего не найдено</div></div></div>';
     } else {
-      searchResults.innerHTML = hits.map(h => `
+      searchResults.innerHTML = hits.map(h => {
+        let thumb = `<div class="sr-thumb">${h.label.slice(0, 2)}</div>`;
+        if (typeof getPalImg === 'function') {
+          const rawName = h.title.split(' (')[0];
+          const imgUrl = getPalImg(rawName);
+          if (imgUrl) {
+            thumb = `<img src="${imgUrl}" class="sr-thumb" alt="${rawName}" onerror="this.outerHTML='<div class=\\'sr-thumb\\'>🐾</div>'">`;
+          }
+        }
+        return `
         <div class="sr-item" data-section="${h.section}">
-          <div class="sr-section">${h.label}</div>
-          <div class="sr-title">${h.title}</div>
-          <div class="sr-preview">${h.text.slice(0, 100)}…</div>
-        </div>`).join('');
+          ${thumb}
+          <div class="sr-content">
+            <div class="sr-section">${h.label}</div>
+            <div class="sr-title">${h.title}</div>
+            <div class="sr-preview">${h.text.slice(0, 85)}…</div>
+          </div>
+        </div>`;
+      }).join('');
+
       searchResults.querySelectorAll('.sr-item').forEach(el => {
         el.addEventListener('click', () => {
-          switchTab(el.dataset.section);
+          if (typeof window.switchAllExtended === 'function') {
+            window.switchAllExtended(el.dataset.section);
+          } else {
+            switchTab(el.dataset.section);
+          }
           searchInput.value = '';
+          if (searchClearBtn) searchClearBtn.style.display = 'none';
           closeSearch();
         });
       });
@@ -102,9 +159,29 @@
     searchResults.classList.remove('visible');
   }
 
-  searchInput.addEventListener('input', e => runSearch(e.target.value.trim()));
-  searchInput.addEventListener('focus', e => { if (e.target.value.trim().length >= 2) runSearch(e.target.value.trim()); });
-  document.addEventListener('click', e => { if (!e.target.closest('.search-wrap') && !e.target.closest('#searchResults')) closeSearch(); });
+  window._closeSearch = closeSearch;
+
+  searchInput.addEventListener('input', e => {
+    const val = e.target.value.trim();
+    if (searchClearBtn) searchClearBtn.style.display = val.length > 0 ? 'flex' : 'none';
+    runSearch(val);
+  });
+  searchInput.addEventListener('focus', e => {
+    if (e.target.value.trim().length >= 2) runSearch(e.target.value.trim());
+  });
+
+  if (searchClearBtn) {
+    searchClearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchClearBtn.style.display = 'none';
+      closeSearch();
+      searchInput.focus();
+    });
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.search-wrap') && !e.target.closest('#searchResults')) closeSearch();
+  });
 
   // --- BACK TO TOP -----------------------------------------
   window.addEventListener('scroll', () => {
@@ -298,6 +375,162 @@
     `).join('');
   }
 
+  // --- БАЗА: ФИЛЬТР ПО ПРОФЕССИЯМ --------------------------
+  function initBaseJobFilters() {
+    const jobBtns = document.querySelectorAll('.base-job-filters .sub-tab');
+    if (!jobBtns.length) return;
+    jobBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        jobBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const selectedJob = btn.dataset.job;
+        const palCards = document.querySelectorAll('#base-container .pal-card');
+        palCards.forEach(card => {
+          if (selectedJob === 'all') {
+            card.classList.remove('hidden');
+          } else {
+            const jobText = card.querySelector('.pal-job-name')?.textContent || '';
+            const match = jobText.toLowerCase().includes(selectedJob.toLowerCase());
+            card.classList.toggle('hidden', !match);
+          }
+        });
+      });
+    });
+  }
+
+  // --- СТИХИИ: ИНТЕРАКТИВНЫЙ ПОМОЩНИК ----------------------
+  const ELEMENT_MATCHUPS = {
+    'Огонь': {
+      strongAgainst: ['Трава', 'Лёд'],
+      weakAgainst: ['Вода'],
+      bestCounters: ['Джормунтид', 'Азуроб', 'Шаолонг', 'Кельпсей'],
+      avoidUsing: ['Лилин', 'Фросталлион', 'Дандилорд'],
+      tip: 'Водные атаки наносят огненным боссам ×1.5 урона. Не выставляйте палов Травы и Льда!'
+    },
+    'Вода': {
+      strongAgainst: ['Огонь'],
+      weakAgainst: ['Электро'],
+      bestCounters: ['Орсерк', 'Гриззболт', 'Дивинольв Люкс'],
+      avoidUsing: ['Рэнджиши', 'Джормунтид Игнис', 'Фалерис'],
+      tip: 'Электричество шокирует водные цели с бонусом ×1.5. Орсерк — непревзойдённый контр-пал.'
+    },
+    'Трава': {
+      strongAgainst: ['Земля'],
+      weakAgainst: ['Огонь'],
+      bestCounters: ['Рэнджиши', 'Джормунтид Игнис', 'Ганглер Игнис', 'Фалерис'],
+      avoidUsing: ['Анубис', 'Эгидрон', 'Рушоар'],
+      tip: 'Огонь испепеляет Траву (множитель ×1.5). Используйте огненных драконов или палов с навыком Огнемёт.'
+    },
+    'Электро': {
+      strongAgainst: ['Вода'],
+      weakAgainst: ['Земля'],
+      bestCounters: ['Анубис', 'Эгидрон', 'Рушоар', 'Гумосс'],
+      avoidUsing: ['Йормунтид', 'Азуроб', 'Шаолонг'],
+      tip: 'Земляные палы полностью поглощают урон от молний и наносят ×1.5 урона по Электро-палам.'
+    },
+    'Лёд': {
+      strongAgainst: ['Дракон'],
+      weakAgainst: ['Огонь'],
+      bestCounters: ['Рэнджиши', 'Джормунтид Игнис', 'Балзам'],
+      avoidUsing: ['Джетрагон', 'Эльпидран', 'Шаолонг'],
+      tip: 'Огонь растапливает Лёд за секунды. Ни в коем случае не выставляйте Драконов — Лёд их сокрушает!'
+    },
+    'Земля': {
+      strongAgainst: ['Электро'],
+      weakAgainst: ['Трава'],
+      bestCounters: ['Лилин', 'Дандилорд', 'Вумпо Ботан'],
+      avoidUsing: ['Орсерк', 'Гриззболт', 'Пуляплюш'],
+      tip: 'Травяные палы с лёгкостью побеждают Землю (бонус ×1.5 урона).'
+    },
+    'Тьма': {
+      strongAgainst: ['Нейтральный'],
+      weakAgainst: ['Дракон'],
+      bestCounters: ['Джетрагон', 'Эльпидран', 'Шаолонг', 'Орсерк'],
+      avoidUsing: ['Ламбалль', 'Котмалль', 'Мулопен'],
+      tip: 'Драконы наносят максимальный урон по Тьме. Джетрагон против боссов Тьмы — абсолютная мета.'
+    },
+    'Дракон': {
+      strongAgainst: ['Тьма'],
+      weakAgainst: ['Лёд'],
+      bestCounters: ['Фросталлион', 'Оксалуне', 'Маммотист Кризт', 'Реиндрикс'],
+      avoidUsing: ['Некромус', 'Беллануар', 'Шэдоубик'],
+      tip: 'Ледяные атаки — слабость Дракона. Фросталлион или Оксалуне быстро победят дракона.'
+    },
+    'Нейтральный': {
+      strongAgainst: [],
+      weakAgainst: ['Тьма'],
+      bestCounters: ['Фросталлион Нокт', 'Беллануар', 'Некромус', 'Шэдоубик'],
+      avoidUsing: [],
+      tip: 'Нейтральные палы не наносят супер-урон ни по кому, но уязвимы к стихии Тьмы.'
+    }
+  };
+
+  function renderElementAdvisor(elem) {
+    const res = document.getElementById('elementAdvisorResult');
+    if (!res) return;
+    const data = ELEMENT_MATCHUPS[elem];
+    if (!data) return;
+
+    res.innerHTML = `
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:4px">
+        <div style="font-size:15px;font-weight:700;margin-bottom:12px;color:var(--text)">
+          Враг стихии: <span class="el-badge el-${elem}">${elem}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px">
+          <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:12px">
+            <div style="font-weight:700;font-size:13.5px;color:var(--accent3);margin-bottom:6px">
+              ✅ Кого брать (×1.5 урона)
+            </div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:8px">
+              Стихии: <strong>${data.weakAgainst.map(w => `<span class="el-badge el-${w}">${w}</span>`).join(' ')}</strong>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              ${data.bestCounters.map(p => `
+                <div style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px">
+                  ${typeof palImgTag === 'function' ? palImgTag(p, 24) : '🐾'}
+                  <span>${p}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div style="background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);border-radius:8px;padding:12px">
+            <div style="font-weight:700;font-size:13.5px;color:var(--danger);margin-bottom:6px">
+              ❌ Не выставлять (слабость)
+            </div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:8px">
+              Опасность от стихий: <strong>${data.strongAgainst.length ? data.strongAgainst.map(s => `<span class="el-badge el-${s}">${s}</span>`).join(' ') : '—'}</strong>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              ${data.avoidUsing.map(p => `
+                <div style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;opacity:0.85">
+                  ${typeof palImgTag === 'function' ? palImgTag(p, 24) : '⚠️'}
+                  <span>${p}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12.5px;color:var(--text2);line-height:1.5;background:var(--bg2);padding:8px 12px;border-radius:6px">
+          💡 <strong>Тактика:</strong> ${data.tip}
+        </div>
+      </div>
+    `;
+  }
+
+  function initElementAdvisor() {
+    const btns = document.querySelectorAll('[data-pick-el]');
+    if (!btns.length) return;
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderElementAdvisor(btn.dataset.pickEl);
+      });
+    });
+    renderElementAdvisor('Огонь');
+  }
+
   // --- INIT -----------------------------------------------
   function init() {
     renderHome();
@@ -308,6 +541,9 @@
     renderLifehacks();
     renderBreeding();
     renderEndgame();
+    initBaseJobFilters();
+    initElementAdvisor();
+    switchCategory('guides', false);
     switchTab('home');
   }
 

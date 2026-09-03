@@ -34,36 +34,33 @@
 
   // ─── ВСТАВКА ВКЛАДОК И СЕКЦИЙ ─────────────────────────────
   function insertTabsAndSections() {
-    const tabsInner = qs('.tabs-inner');
     const main = qs('.main');
-
-    const newTabs = [
-      { id: 'breeding-calc', label: '🧮 Калькулятор' },
-      { id: 'map',           label: '📍 Карта' },
-      { id: 'food-calc',     label: '🍽️ Еда' },
-      { id: 'base-planner',  label: '🏗️ Планировщик' },
-      { id: 'tech-tree',     label: '📊 Технологии' },
-      { id: 'bosses',        label: '🎯 Боссы' },
-      { id: 'gold',          label: '💰 Золото' },
+    const newSectionIds = [
+      'breeding-calc', 'map', 'food-calc', 'base-planner', 'tech-tree', 'bosses', 'gold'
     ];
 
-    newTabs.forEach(t => {
-      const btn = el('button', 'tab-btn', t.label);
-      btn.dataset.tab = t.id;
-      tabsInner.appendChild(btn);
-
-      const sec = el('div', 'section');
-      sec.id = t.id;
-      main.appendChild(sec);
+    newSectionIds.forEach(id => {
+      if (!qs('#' + id)) {
+        const sec = el('div', 'section');
+        sec.id = id;
+        main.appendChild(sec);
+      }
     });
 
-    // Переключение вкладок — обновлённый хендлер для ВСЕХ кнопок
+    // Переключение вкладок — хендлер для всех кнопок
     qsa('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => switchAll(btn.dataset.tab));
     });
   }
 
   function switchAll(id) {
+    const targetBtn = qs(`.tab-btn[data-tab="${id}"]`);
+    if (targetBtn && targetBtn.dataset.cat) {
+      if (typeof window._switchCategory === 'function') {
+        window._switchCategory(targetBtn.dataset.cat, false);
+      }
+    }
+
     qsa('.tab-btn').forEach(b => {
       const isActive = b.dataset.tab === id;
       b.classList.toggle('active', isActive);
@@ -73,9 +70,12 @@
     });
     qsa('.section').forEach(s => s.classList.toggle('active', s.id === id));
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window._closeSearch === 'function') window._closeSearch();
     // Ленивая инициализация карты
     if (id === 'map') setTimeout(initMapCanvas, 50);
   }
+
+  window.switchAllExtended = switchAll;
 
   // ══════════════════════════════════════════════════════════
   //  1. КАЛЬКУЛЯТОР РАЗВЕДЕНИЯ
@@ -1055,6 +1055,7 @@
     buildTechTree();
     buildBosses();
     buildGold();
+    if (typeof window._switchCategory === 'function') window._switchCategory('guides', false);
   }
 
   if (document.readyState === 'loading') {

@@ -26,6 +26,7 @@
     <div class="search-wrap">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input id="globalSearch" type="text" placeholder="Поиск по гайдам, палам, механикам…" autocomplete="off" />
+      <button id="searchClearBtn" class="search-clear-btn" style="display:none;" title="Очистить поиск">✕</button>
     </div>
 
     <!-- Фильтр по уровню -->
@@ -43,19 +44,45 @@
 <div id="searchResults"></div>
 
 <!-- =========================================================
-     ВКЛАДКИ НАВИГАЦИИ
+     ГЛАВНЫЕ КАТЕГОРИИ (ЧИСТЫЙ РЕЖИМ)
+     ========================================================= -->
+<div class="category-bar">
+  <div class="category-inner">
+    <button class="cat-btn active" data-cat="guides"><span class="cat-emoji">📖</span> Гайды</button>
+    <button class="cat-btn" data-cat="pals"><span class="cat-emoji">🐾</span> Палы</button>
+    <button class="cat-btn" data-cat="tools"><span class="cat-emoji">🛠️</span> Инструменты</button>
+    <button class="cat-btn" data-cat="progression"><span class="cat-emoji">📈</span> Развитие</button>
+  </div>
+</div>
+
+<!-- =========================================================
+     ВКЛАДКИ НАВИГАЦИИ (СГРУППИРОВАННЫЕ)
      ========================================================= -->
 <nav class="tabs-bar">
   <div class="tabs-inner">
-    <button class="tab-btn active" data-tab="home"><span class="tab-emoji">🏠</span> Начало</button>
-    <button class="tab-btn" data-tab="mechanics"><span class="tab-emoji">🔧</span> Механики</button>
-    <button class="tab-btn" data-tab="base"><span class="tab-emoji">🏡</span> База</button>
-    <button class="tab-btn" data-tab="combat"><span class="tab-emoji">⚔️</span> Боёвка</button>
-    <button class="tab-btn" data-tab="passives"><span class="tab-emoji">✨</span> Пассивки</button>
-    <button class="tab-btn" data-tab="breeding"><span class="tab-emoji">🧬</span> Разведение</button>
-    <button class="tab-btn" data-tab="lifehacks"><span class="tab-emoji">💡</span> Лайфхаки</button>
-    <button class="tab-btn" data-tab="endgame"><span class="tab-emoji">🗺️</span> Эндгейм</button>
-    <button class="tab-btn" data-tab="elements"><span class="tab-emoji">🔥</span> Стихии</button>
+    <!-- Категория: Гайды -->
+    <button class="tab-btn active" data-tab="home" data-cat="guides"><span class="tab-emoji">🏠</span> Начало</button>
+    <button class="tab-btn" data-tab="mechanics" data-cat="guides"><span class="tab-emoji">🔧</span> Механики</button>
+    <button class="tab-btn" data-tab="lifehacks" data-cat="guides"><span class="tab-emoji">💡</span> Лайфхаки</button>
+    <button class="tab-btn" data-tab="endgame" data-cat="guides"><span class="tab-emoji">🗺️</span> Эндгейм</button>
+
+    <!-- Категория: Палы -->
+    <button class="tab-btn" data-tab="base" data-cat="pals"><span class="tab-emoji">🏡</span> База</button>
+    <button class="tab-btn" data-tab="combat" data-cat="pals"><span class="tab-emoji">⚔️</span> Боёвка</button>
+    <button class="tab-btn" data-tab="passives" data-cat="pals"><span class="tab-emoji">✨</span> Пассивки</button>
+    <button class="tab-btn" data-tab="bosses" data-cat="pals"><span class="tab-emoji">🎯</span> Боссы</button>
+
+    <!-- Категория: Инструменты -->
+    <button class="tab-btn" data-tab="breeding-calc" data-cat="tools"><span class="tab-emoji">🧮</span> Калькулятор</button>
+    <button class="tab-btn" data-tab="map" data-cat="tools"><span class="tab-emoji">📍</span> Карта</button>
+    <button class="tab-btn" data-tab="food-calc" data-cat="tools"><span class="tab-emoji">🍽️</span> Еда</button>
+    <button class="tab-btn" data-tab="base-planner" data-cat="tools"><span class="tab-emoji">🏗️</span> Планировщик</button>
+
+    <!-- Категория: Развитие -->
+    <button class="tab-btn" data-tab="tech-tree" data-cat="progression"><span class="tab-emoji">📊</span> Технологии</button>
+    <button class="tab-btn" data-tab="breeding" data-cat="progression"><span class="tab-emoji">🧬</span> Разведение</button>
+    <button class="tab-btn" data-tab="elements" data-cat="progression"><span class="tab-emoji">🔥</span> Стихии</button>
+    <button class="tab-btn" data-tab="gold" data-cat="progression"><span class="tab-emoji">💰</span> Золото</button>
   </div>
 </nav>
 
@@ -135,6 +162,25 @@
 
     <div class="info-box">
       📦 <strong>Совет по планировке:</strong> Ставь склад в центре базы, выбирай <strong>абсолютно ровный рельеф</strong> — иначе палы будут зависать. Используй несколько баз под разные задачи.
+    </div>
+
+    <!-- Быстрый фильтр специалистов по работе -->
+    <div style="margin-bottom:18px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Фильтр по специализации:</div>
+      <div class="base-job-filters" style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="sub-tab active" data-job="all">Все (12)</button>
+        <button class="sub-tab" data-job="Разжигание">🔥 Разжигание</button>
+        <button class="sub-tab" data-job="Полив">💧 Полив</button>
+        <button class="sub-tab" data-job="Посадка">🌱 Посадка</button>
+        <button class="sub-tab" data-job="Добыча">⛏️ Добыча</button>
+        <button class="sub-tab" data-job="Ручная работа">🔨 Крафт</button>
+        <button class="sub-tab" data-job="Электричество">⚡ Электро</button>
+        <button class="sub-tab" data-job="Медицина">💊 Медицина</button>
+        <button class="sub-tab" data-job="Транспортировка">🚀 Транспорт</button>
+        <button class="sub-tab" data-job="Сбор">🌾 Сбор</button>
+        <button class="sub-tab" data-job="Лесоповал">🪓 Лес</button>
+        <button class="sub-tab" data-job="Скотоводство">🍯 Ранчо</button>
+      </div>
     </div>
 
     <div class="grid-3" id="base-container">
@@ -446,6 +492,28 @@
 
     <div class="info-box">
       ⚡ <strong>Множители урона:</strong> Суперэффективно = ×1.5 | Нейтрально = ×1.0 | Неэффективно = ×0.5. Стихийные пассивки (+20%) <strong>множатся</strong> с этим бонусом.
+    </div>
+
+    <!-- ИНТЕРАКТИВНЫЙ ПОМОЩНИК ПО СТИХИЯМ -->
+    <div class="card" style="margin-bottom:24px;border:1px solid var(--accent);background:linear-gradient(135deg,rgba(230,126,34,0.06),var(--bg2));">
+      <div style="font-size:17px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:22px">⚡</span> Интерактивный советник: Кого брать против босса?
+      </div>
+      <p style="color:var(--text2);font-size:13.5px;margin-bottom:14px">
+        Нажмите на стихию босса или вражеского пала, чтобы мгновенно увидеть лучшие контр-стихии:
+      </p>
+      <div class="element-picker-buttons" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="sub-tab active" data-pick-el="Огонь">🔥 Огонь</button>
+        <button class="sub-tab" data-pick-el="Вода">💧 Вода</button>
+        <button class="sub-tab" data-pick-el="Трава">🌱 Трава</button>
+        <button class="sub-tab" data-pick-el="Электро">⚡ Электро</button>
+        <button class="sub-tab" data-pick-el="Лёд">❄️ Лёд</button>
+        <button class="sub-tab" data-pick-el="Земля">⛰️ Земля</button>
+        <button class="sub-tab" data-pick-el="Тьма">🌑 Тьма</button>
+        <button class="sub-tab" data-pick-el="Дракон">🐉 Дракон</button>
+        <button class="sub-tab" data-pick-el="Нейтральный">⚪ Нейтрал</button>
+      </div>
+      <div id="elementAdvisorResult"></div>
     </div>
 
     <div class="table-wrap">
