@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  PAL IMAGES — Полная база данных иконок палов (299 палов)
 //  Источник: cdn.paldb.cc / Официальные текстуры Palworld
 // ============================================================
@@ -388,29 +388,29 @@ const RU_TO_ENG = {
 function getPalImg(nameOrEng) {
   if (!nameOrEng) return null;
   const raw = String(nameOrEng).trim();
-  
+
   // 1. Прямой поиск по английскому имени
   let internal = PAL_INTERNAL[raw];
-  if (internal) return \T_\_icon_normal.webp;
+  if (internal) return PAL_IMG_BASE + 'T_' + internal + '_icon_normal.webp';
 
   // 2. Поиск через русский словарь
   const eng = RU_TO_ENG[raw];
   if (eng && PAL_INTERNAL[eng]) {
-    return \T_\_icon_normal.webp;
+    return PAL_IMG_BASE + 'T_' + PAL_INTERNAL[eng] + '_icon_normal.webp';
   }
 
-  // 3. Нечувствительный к регистру поиск
+  // 3. Нечувствительный к регистру поиск по английскому
   const lower = raw.toLowerCase();
   for (const [k, v] of Object.entries(PAL_INTERNAL)) {
     if (k.toLowerCase() === lower) {
-      return \T_\_icon_normal.webp;
+      return PAL_IMG_BASE + 'T_' + v + '_icon_normal.webp';
     }
   }
 
-  // 4. Нечувствительный к регистру по русскому словарю
+  // 4. Нечувствительный к регистру поиск по русскому
   for (const [k, v] of Object.entries(RU_TO_ENG)) {
     if (k.toLowerCase() === lower && PAL_INTERNAL[v]) {
-      return \T_\_icon_normal.webp;
+      return PAL_IMG_BASE + 'T_' + PAL_INTERNAL[v] + '_icon_normal.webp';
     }
   }
 
@@ -421,19 +421,26 @@ function getPalImg(nameOrEng) {
 function palImgTag(nameOrEng, size, alt, extraStyle) {
   size = size || 64;
   const url = getPalImg(nameOrEng);
-  const fallbackSvg = data:image/svg+xml,\;
+  const fallbackSvg = 'data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' +
+    '<rect width="' + size + '" height="' + size + '" rx="10" fill="#21262d"/>' +
+    '<text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-size="' + Math.floor(size * 0.42) + '" fill="#8b949e">🐾</text>' +
+    '</svg>'
+  );
 
-  const style = width:\px;height:\px;min-width:\px;border-radius:10px;object-fit:cover;background:#161b22;border:1px solid rgba(255,255,255,0.08);box-shadow:0 2px 8px rgba(0,0,0,0.35);\;
+  const style = 'width:' + size + 'px;height:' + size + 'px;min-width:' + size + 'px;border-radius:10px;object-fit:cover;background:#161b22;border:1px solid rgba(255,255,255,0.08);box-shadow:0 2px 8px rgba(0,0,0,0.35);' + (extraStyle || '');
 
   if (!url) {
-    return <img src="\" alt="\" style="\" loading="lazy">;
+    return '<img src="' + fallbackSvg + '" alt="' + (alt || nameOrEng || '') + '" style="' + style + '" loading="lazy">';
   }
 
-  return <img 
-    src="\" 
-    alt="\" 
-    style="\" 
-    loading="lazy" 
-    onerror="this.onerror=null;this.src='\'"
-  >;
+  return '<img src="' + url + '" alt="' + (alt || nameOrEng || '') + '" style="' + style + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + fallbackSvg + '\'">';
+}
+
+if (typeof window !== 'undefined') {
+  window.getPalImg = getPalImg;
+  window.palImgTag = palImgTag;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { getPalImg, palImgTag };
 }
