@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Palworld Helper — Гайды и советы</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- =========================================================
+     HEADER
+     ========================================================= -->
+<header class="header">
+  <div class="header-inner">
+    <!-- Логотип -->
+    <a class="logo" href="#">
+      <div class="logo-icon">🌐</div>
+      <div class="logo-text">Palworld<span>Helper</span></div>
+    </a>
+
+    <!-- Поиск -->
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="globalSearch" type="text" placeholder="Поиск по гайдам, палам, механикам…" autocomplete="off" />
+    </div>
+
+    <!-- Фильтр по уровню -->
+    <div class="filter-pills">
+      <span class="filter-label">Уровень:</span>
+      <button class="pill active" data-filter="all">Все</button>
+      <button class="pill" data-filter="beginner">🌱 Новичок</button>
+      <button class="pill" data-filter="intermediate">⚡ Средний</button>
+      <button class="pill" data-filter="advanced">🔥 Опытный</button>
+    </div>
+  </div>
+</header>
+
+<!-- Дропдаун поиска -->
+<div id="searchResults"></div>
+
+<!-- =========================================================
+     ВКЛАДКИ НАВИГАЦИИ
+     ========================================================= -->
+<nav class="tabs-bar">
+  <div class="tabs-inner">
+    <button class="tab-btn active" data-tab="home"><span class="tab-emoji">🏠</span> Начало</button>
+    <button class="tab-btn" data-tab="mechanics"><span class="tab-emoji">🔧</span> Механики</button>
+    <button class="tab-btn" data-tab="base"><span class="tab-emoji">🏡</span> База</button>
+    <button class="tab-btn" data-tab="combat"><span class="tab-emoji">⚔️</span> Боёвка</button>
+    <button class="tab-btn" data-tab="passives"><span class="tab-emoji">✨</span> Пассивки</button>
+    <button class="tab-btn" data-tab="breeding"><span class="tab-emoji">🧬</span> Разведение</button>
+    <button class="tab-btn" data-tab="lifehacks"><span class="tab-emoji">💡</span> Лайфхаки</button>
+    <button class="tab-btn" data-tab="endgame"><span class="tab-emoji">🗺️</span> Эндгейм</button>
+    <button class="tab-btn" data-tab="elements"><span class="tab-emoji">🔥</span> Стихии</button>
+  </div>
+</nav>
+
+<!-- =========================================================
+     ОСНОВНОЙ КОНТЕНТ
+     ========================================================= -->
+<main class="main">
+
+  <!-- ======================================================
+       🏠 НАЧАЛО
+       ====================================================== -->
+  <section class="section active" id="home">
+    <div class="hero">
+      <h1>Palworld <span>Helper</span></h1>
+      <p>Полный гайд по игре — советы для новичков, продвинутые механики, лучшие палы для базы и боя, лайфхаки и эндгейм-контент</p>
+      <div class="hero-tags">
+        <span class="hero-tag">🌱 Советы для новичков</span>
+        <span class="hero-tag">🔧 Скрытые механики</span>
+        <span class="hero-tag">🏡 Оптимизация базы</span>
+        <span class="hero-tag">⚔️ Боевые комбо</span>
+        <span class="hero-tag">🧬 Разведение палов</span>
+        <span class="hero-tag">💡 Лайфхаки</span>
+      </div>
+    </div>
+
+    <!-- Счётчики -->
+    <div class="stats-strip">
+      <div class="stat-box"><div class="num">10</div><div class="lbl">Советов новичкам</div></div>
+      <div class="stat-box"><div class="num">10</div><div class="lbl">Скрытых механик</div></div>
+      <div class="stat-box"><div class="num">12</div><div class="lbl">Палов для базы</div></div>
+      <div class="stat-box"><div class="num">8</div><div class="lbl">Боевых палов</div></div>
+      <div class="stat-box"><div class="num">14</div><div class="lbl">Пассивок</div></div>
+      <div class="stat-box"><div class="num">10</div><div class="lbl">Лайфхаков</div></div>
+    </div>
+
+    <div class="info-box">
+      💡 <strong>Используй фильтр «Уровень»</strong> в шапке, чтобы видеть только релевантные советы. Поиск работает по всем разделам — нажми на результат, чтобы перейти к нужной вкладке.
+    </div>
+
+    <div class="section-header">
+      <h2>🌱 Советы для начинающих</h2>
+      <p>Самое важное, что не объясняет игра в первые часы</p>
+    </div>
+    <div class="grid-2" id="tips-container">
+      <!-- Заполняется через JS -->
+    </div>
+  </section>
+
+  <!-- ======================================================
+       🔧 МЕХАНИКИ
+       ====================================================== -->
+  <section class="section" id="mechanics">
+    <div class="section-header">
+      <h2>🔧 Скрытые механики</h2>
+      <p>То, что игра не объясняет сама — от IVs до патфайндинга</p>
+    </div>
+    <div class="info-box">
+      ⚙️ Здесь собраны механики, которые работают в фоне и сильно влияют на прогресс. Понимание их — ключ к эффективной игре независимо от уровня.
+    </div>
+    <div class="grid-2" id="mechanics-container">
+      <!-- Заполняется через JS -->
+    </div>
+  </section>
+
+  <!-- ======================================================
+       🏡 БАЗА
+       ====================================================== -->
+  <section class="section" id="base">
+    <div class="section-header">
+      <h2>🏡 Лучшие палы для базы</h2>
+      <p>Топ-специалисты по каждому типу работы — Palworld 1.0</p>
+    </div>
+
+    <div class="tip-box">
+      ✅ <strong>Ключевой принцип:</strong> Пал с одним навыком Lv8 >> пала с пятью навыками Lv3. Используй <strong>Стойку мониторинга</strong>, чтобы отключить ненужные задания и сфокусировать специалиста. Прокачивай через <strong>Конденсор сущностей</strong> для повышения ранга.
+    </div>
+
+    <div class="info-box">
+      📦 <strong>Совет по планировке:</strong> Ставь склад в центре базы, выбирай <strong>абсолютно ровный рельеф</strong> — иначе палы будут зависать. Используй несколько баз под разные задачи.
+    </div>
+
+    <div class="grid-3" id="base-container">
+      <!-- Заполняется через JS -->
+    </div>
+
+    <!-- Таблица рецептов Ранчо -->
+    <div class="section-header" style="margin-top:32px">
+      <h2>🐄 Продукты Ранчо — автоматизация</h2>
+      <p>Какой пал даёт какой продукт на Ранчо</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Продукт</th><th>Пал</th><th>Для чего</th></tr></thead>
+        <tbody>
+          <tr><td>🍯 Мёд</td><td>Бигарде (Beegarde)</td><td>Обязателен для Тортов (разведение)</td></tr>
+          <tr><td>🥛 Молоко</td><td>Мулопен (Melpaca)</td><td>Торты, рецепты еды</td></tr>
+          <tr><td>🥚 Яйца</td><td>Чикипи (Chikipi)</td><td>Торты, рецепты еды</td></tr>
+          <tr><td>🍓 Красные ягоды</td><td>Памперт (Pumkin Pup)</td><td>Торты, зелья</td></tr>
+          <tr><td>🧶 Шерсть</td><td>Ламбалль (Lamball)</td><td>Ткань, одежда</td></tr>
+          <tr><td>🍬 Сахарная вата</td><td>Улипоп (Woolipop)</td><td>Медицина</td></tr>
+          <tr><td>💎 Рубин дракона</td><td>Релакса (Relaxasaurus)</td><td>Редкий материал</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       ⚔️ БОЁВКА
+       ====================================================== -->
+  <section class="section" id="combat">
+    <div class="section-header">
+      <h2>⚔️ Лучшие боевые палы</h2>
+      <p>Топ-тир для ПвЕ, башен и рейдов — мета Palworld 1.0</p>
+    </div>
+
+    <div class="tip-box">
+      ⚔️ <strong>Совет по команде:</strong> Держи 2–3 разных стихии для покрытия слабостей боссов. Суперэффективный удар даёт ×1.5 урона. Для рейдов и башен — стихия с преимуществом обязательна.
+    </div>
+
+    <div class="warn-box">
+      ⚠️ Пассивка <strong>«Бог разрушения»</strong> даёт огромный урон, но режет HP на 50%. Используй только если постоянно контролируешь бой и лечишь пала.
+    </div>
+
+    <div class="grid-3" id="combat-container">
+      <!-- Заполняется через JS -->
+    </div>
+
+    <!-- Таблица комбо для игрока -->
+    <div class="section-header" style="margin-top:32px">
+      <h2>🎮 Тактические комбо</h2>
+      <p>Проверенные связки для разных ситуаций</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ситуация</th><th>Рекомендуемый состав</th><th>Тактика</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>🗼 Башни (боссы)</td>
+            <td>Беллануар Либеро + Ганглер Игнис + нюкер нужной стихии</td>
+            <td>Нюки в окна уязвимости, лечение через Вампиризм</td>
+          </tr>
+          <tr>
+            <td>🌟 Легендарные палы (поимка)</td>
+            <td>Любой танк Lv40+ + Пал со стазисом</td>
+            <td>Снизить HP до <20%, бросать Ультра сферу в спину</td>
+          </tr>
+          <tr>
+            <td>⚔️ Рейд Беллануар</td>
+            <td>Беллануар Либеро + Фросталлион Нокт + 2× Некромус</td>
+            <td>Все с пассивкой Легенда + Владыка тьмы для ×1.5 урона</td>
+          </tr>
+          <tr>
+            <td>🏃 Быстрое исследование</td>
+            <td>Джетрагон (маунт) + 2 бойца для стычек</td>
+            <td>Джетрагон — лучший летающий маунт для скорости</td>
+          </tr>
+          <tr>
+            <td>👤 PvE фарм ресурсов</td>
+            <td>Джормунтид Игнис + Анубис + поддержка</td>
+            <td>Живучий состав для зачистки зон без возврата на базу</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       ✨ ПАССИВКИ
+       ====================================================== -->
+  <section class="section" id="passives">
+    <div class="section-header">
+      <h2>✨ Пассивные навыки</h2>
+      <p>Лучшие пассивки для боя и работы с реальными цифрами</p>
+    </div>
+
+    <div class="info-box">
+      🎲 <strong>Как получить нужные пассивки:</strong> Через разведение — каждый родитель передаёт свои пассивки с определённым шансом. Пассивка «Легенда» встречается только у легендарных палов и передаётся через разведение.
+    </div>
+
+    <!-- Боевые -->
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:16px;color:var(--danger)">⚔️ Для боя</h3>
+    <div class="grid-3" id="passives-combat" style="margin-bottom:32px">
+      <!-- Заполняется через JS -->
+    </div>
+
+    <!-- Рабочие -->
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:16px;color:var(--accent3)">🏗️ Для работы на базе</h3>
+    <div class="grid-4" id="passives-work">
+      <!-- Заполняется через JS -->
+    </div>
+
+    <!-- Таблица быстрого сравнения -->
+    <div class="section-header" style="margin-top:32px">
+      <h2>📊 Быстрое сравнение</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Пассивка</th><th>Категория</th><th>Эффект</th><th>Штраф</th><th>Оценка</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Легенда</strong></td><td>Бой</td><td>+20% ATK/DEF, +15% SPD</td><td>—</td><td>⭐⭐⭐⭐⭐</td></tr>
+          <tr><td><strong>Демон-бог</strong></td><td>Бой</td><td>+30% ATK, +5% DEF</td><td>—</td><td>⭐⭐⭐⭐⭐</td></tr>
+          <tr><td><strong>Мышцеголов</strong></td><td>Бой</td><td>+30% ATK</td><td>−50% Work</td><td>⭐⭐⭐⭐</td></tr>
+          <tr><td><strong>Бог разрушения</strong></td><td>Бой</td><td>+40% ATK, +20% DEF</td><td>−50% HP</td><td>⭐⭐⭐ ⚠️</td></tr>
+          <tr><td><strong>Яростный</strong></td><td>Бой</td><td>+20% ATK</td><td>—</td><td>⭐⭐⭐⭐</td></tr>
+          <tr><td><strong>Вампиризм</strong></td><td>Бой</td><td>Лечение от урона</td><td>—</td><td>⭐⭐⭐⭐</td></tr>
+          <tr><td><strong>Рука демона</strong></td><td>Работа</td><td>+90% Work SPD</td><td>SAN −15% быстрее</td><td>⭐⭐⭐⭐⭐</td></tr>
+          <tr><td><strong>Мастер</strong></td><td>Работа</td><td>+50% Work SPD</td><td>—</td><td>⭐⭐⭐⭐⭐</td></tr>
+          <tr><td><strong>Рабочая скотинка</strong></td><td>Работа</td><td>+30% Work SPD</td><td>−30% ATK</td><td>⭐⭐⭐⭐</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       🧬 РАЗВЕДЕНИЕ
+       ====================================================== -->
+  <section class="section" id="breeding">
+    <div class="section-header">
+      <h2>🧬 Разведение палов</h2>
+      <p>Полное руководство — от первого Торта до идеального пала</p>
+    </div>
+
+    <div class="tip-box">
+      🎯 <strong>Цель разведения:</strong> Получить пала с 4 нужными пассивками + IVs 100 по всем параметрам. Это долго, но результат — самые сильные палы в игре.
+    </div>
+
+    <!-- Шаги -->
+    <div class="section-header" style="margin-top:28px">
+      <h2>📋 Пошаговое руководство</h2>
+    </div>
+    <div class="steps" style="margin-bottom:32px">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Открой Ферму разведения (Уровень 19)</h4>
+          <p>Изучи в дереве технологий. Требует Дерева ×100, Камня ×20, Волокна ×50. Размести на базе — палам нужно свободное место рядом.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Автоматизируй производство Тортов</h4>
+          <div class="recipe-box">
+            🎂 <strong>Рецепт Торта:</strong> Мёд ×8 (Бигарде на Ранчо) + Красные ягоды ×7 + Молоко ×7 (Мулопен) + Яйца ×8 (Чикипи) + Пшеничная мука ×5 (ферма пшеницы)
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Выбери пару с нужными пассивками</h4>
+          <p>Цель: каждый родитель должен иметь хотя бы 2 из 4 целевых пассивок. Используй онлайн-калькулятор разведения для поиска нужных пар по результирующему потомку.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Добавь Якумо в активную группу</h4>
+          <p>Партнёрский навык Якумо «Птицы одного полёта» повышает шанс передачи пассивок потомку. Держи его в пати во время инкубации.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h4>Инкубируй яйцо с нужной температурой</h4>
+          <p>Тёмные яйца — нужен Обогреватель рядом. Замороженные — Охладитель. Нейтральные — любая температура. Следи за индикатором температуры яйца.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h4>Прокачай через Конденсор сущностей</h4>
+          <p>Жертвуй дубликатами для повышения ранга: Rank 2 = 4 пала, Rank 3 = 16, Rank 4 = 32+. Каждый ранг повышает уровень рабочего навыка и базовые статы.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Карточки данных разведения -->
+    <div class="section-header">
+      <h2>📚 Дополнительные советы</h2>
+    </div>
+    <div class="grid-2" id="breeding-container">
+      <!-- Заполняется через JS -->
+    </div>
+
+    <!-- Ключевые рецепты -->
+    <div class="section-header" style="margin-top:28px">
+      <h2>🔬 Ключевые рецепты разведения</h2>
+      <p>Важные палы, которых легче получить через разведение</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Результат</th><th>Родитель 1</th><th>Родитель 2</th><th>Зачем</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Орсерк</strong></td><td>Дивинольв (самец)</td><td>Мерзитая (самка)</td><td>Лучший электрик для базы</td></tr>
+          <tr><td><strong>Анубис</strong></td><td>Анубис ×2 (разные IVs)</td><td>—</td><td>Улучшение IVs через само-разведение</td></tr>
+          <tr><td><strong>Джормунтид Игнис</strong></td><td>Джормунтид</td><td>Мерзитая Игнис</td><td>Боевой брузер с огнём</td></tr>
+          <tr><td><strong>Любой пал с Легендой</strong></td><td>Легендарный пал с Легендой</td><td>Нужный пал</td><td>Передача пассивки Легенда потомку</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       💡 ЛАЙФХАКИ
+       ====================================================== -->
+  <section class="section" id="lifehacks">
+    <div class="section-header">
+      <h2>💡 Лайфхаки и скрытые трюки</h2>
+      <p>Проверенные способы сэкономить время и ресурсы</p>
+    </div>
+    <div class="info-box">
+      🚀 Большинство этих трюков работают как в одиночной, так и в кооперативной игре. Некоторые (торговцы в клетке) доступны только в сингл-плеере.
+    </div>
+    <div class="grid-2" id="lifehacks-container">
+      <!-- Заполняется через JS -->
+    </div>
+  </section>
+
+  <!-- ======================================================
+       🗺️ ЭНДГЕЙМ
+       ====================================================== -->
+  <section class="section" id="endgame">
+    <div class="section-header">
+      <h2>🗺️ Эндгейм-контент</h2>
+      <p>Башни, рейды, легендарные палы и финальное снаряжение</p>
+    </div>
+
+    <div class="warn-box">
+      ⚠️ Весь контент этого раздела рассчитан на игроков уровня 35+. Убедись, что у тебя прокачана команда и снаряжение перед атакой на башни и рейды.
+    </div>
+
+    <div class="grid-2" id="endgame-container">
+      <!-- Заполняется через JS -->
+    </div>
+
+    <!-- Порядок башен -->
+    <div class="section-header" style="margin-top:32px">
+      <h2>🗼 Порядок прохождения башен</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Зо &amp; Медзур — Башня 1</h4>
+          <p>Рекомендуемый уровень: 20+. Огненный тип. Используй Водяных и Земляных палов.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Лилли &amp; Коксан — Башня 2</h4>
+          <p>Рекомендуемый уровень: 28+. Ледяной тип. Используй Огненных палов.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Виктор &amp; Шедоубик — Башня 3</h4>
+          <p>Рекомендуемый уровень: 35+. Тёмный тип. Используй Драконов и Нейтральных.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Паладиус &amp; Некромус — Башня 4</h4>
+          <p>Рекомендуемый уровень: 42+. Двойная угроза — Свет и Тьма. Одни из самых сложных боссов башен.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h4>Захаид &amp; Беллануар — Башня 5</h4>
+          <p>Рекомендуемый уровень: 47+. Финальная башня, требует идеально прокачанной команды с пассивками Легенда.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       🔥 СТИХИИ
+       ====================================================== -->
+  <section class="section" id="elements">
+    <div class="section-header">
+      <h2>🔥 Таблица стихий</h2>
+      <p>Что эффективно против чего — ×1.5 урона за суперэффективность</p>
+    </div>
+
+    <div class="info-box">
+      ⚡ <strong>Множители урона:</strong> Суперэффективно = ×1.5 | Нейтрально = ×1.0 | Неэффективно = ×0.5. Стихийные пассивки (+20%) <strong>множатся</strong> с этим бонусом.
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Атакующая стихия ↓</th>
+            <th style="color:var(--accent3)">✅ Суперэффективно против</th>
+            <th style="color:var(--danger)">❌ Неэффективно против</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="el-badge el-Нейтральный" style="padding:3px 10px">Нейтральный</span></td>
+            <td><span class="el-badge el-Тьма">Тьма</span></td>
+            <td style="color:var(--text2)">—</td>
+          </tr>
+          <tr>
+            <td><span class="el-badge el-Огонь" style="padding:3px 10px">Огонь</span></td>
+            <td><span class="el-badge el-Трава">Трава</span> <span class="el-badge el-Лёд">Лёд</span></td>
+            <td><span class="el-badge el-Вода">Вода</span> <span class="el-badge el-Земля">Земля</span></td>
+          </tr>
+          <tr>
+            <td><span class="el-badge el-Вода" style="padding:3px 10px">Вода</span></td>
+            <td><span class="el-badge el-Огонь">Огонь</span> <span class="el-badge el-Земля">Земля</span></td>
+            <td><span class="el-badge el-Электро">Электро</span> <span class="el-badge el-Трава">Трава</span></td>
+          </tr>
+          <tr>
+            <td><span class="el-badge el-Трава" style="padding:3px 10px">Трава</span></td>
+            <td><span class="el-badge el-Вода">Вода</span> <span class="el-badge el-Земля">Земля</span></td>
+            <td><span class="el-badge el-Огонь">Огонь</span> <span class="el-badge el-Лёд">Лёд</span></td>
+          </tr>
+          <tr>
+            <td><span class="el-badge el-Электро" style="padding:3px 10px">Электро</span></td>
+            <td><span class="el-badge el-Вода">Вода</span> <span class="el-badge el-Лёд">Лёд</span></td>
+            <td><span class="el-badge el-Земля">Земля</span> <span class="el-badge el-Дракон">Дракон</span></td>
+          </tr>
+          <tr>
+            <td><span class="el-badge el-Лёд" style="padding:3px 10px">Лёд</span></td>
+            <td><span class="el-badge el-Трава">Трава</span> <span class="el-badge el-Земля">Земля</span></td>
+            <td><span class="el-badge el-Огонь">Огонь</span> <span class="el-badge el-Электро">Электро</span></td>
+          </tr>
+          <tr>
+            <td><span class="el-badge el-Земля" style="padding:3px 10px">Земля</span></td>
+            <td><span class="el-badge el-Огонь">Огонь</span> <span class="el-badge el-Электро">Электро</span></td>
+            <td><span class="el-badge el-Вода">Вода</span> <span class="el-badge el-Трава">Трава</span> <span class="el-badge el-Лёд">Лёд</span></td>
+          </tr>
+          <tr>
+            <td><span class="el-badge el-Тьма" style="padding:3px 10px">Тьма</span></td>
+            <td><span class="el-badge el-Нейтральный">Нейтральный</span></td>
+            <td><span class="el-badge el-Дракон">Дракон</span></td>
+          </tr>
+          <tr>
+            <td><span class="el-badge el-Дракон" style="padding:3px 10px">Дракон</span></td>
+            <td><span class="el-badge el-Тьма">Тьма</span> <span class="el-badge el-Электро">Электро</span></td>
+            <td style="color:var(--text2)">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Совет по стихиям -->
+    <div class="tip-box">
+      🎯 <strong>Стратегия покрытия:</strong> Идеальная боевая команда покрывает 3–4 стихии одновременно. Самые полезные: Огонь (против Льда/Травы), Электро (против Воды/Льда), Дракон (против Тьмы/Электро).
+    </div>
+
+    <!-- Легендарки по стихиям -->
+    <div class="section-header" style="margin-top:28px">
+      <h2>👑 Легендарные палы по стихиям</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Стихия</th><th>Легендарный пал</th><th>Особенность</th></tr></thead>
+        <tbody>
+          <tr><td><span class="el-badge el-Лёд">Лёд</span></td><td>Фросталлион</td><td>Ледяной маунт, топ ДД против огня</td></tr>
+          <tr><td><span class="el-badge el-Тьма">Тьма</span></td><td>Фросталлион Нокт</td><td>Сбор Lv7 + боевой топ</td></tr>
+          <tr><td><span class="el-badge el-Тьма">Тьма</span></td><td>Некромус</td><td>Полевой босс, полевой танк</td></tr>
+          <tr><td><span class="el-badge el-Дракон">Дракон</span></td><td>Джетрагон</td><td>Лучший летающий маунт</td></tr>
+          <tr><td><span class="el-badge el-Тьма">Тьма</span></td><td>Беллануар / Либеро</td><td>Рейд-эксклюзив, максимальный ДПС</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<!-- Кнопка наверх -->
+<button id="backTop" title="Наверх">↑</button>
+
+<!-- Скрипты -->
+<script src="pal_images.js"></script>
+<script src="data.js"></script>
+<script src="data_extended.js"></script>
+<script src="app.js"></script>
+<script src="app_extended.js"></script>
+
+</body>
+</html>

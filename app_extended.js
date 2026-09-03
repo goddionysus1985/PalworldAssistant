@@ -1,0 +1,1035 @@
+// ============================================================
+//  PALWORLD HELPER — Расширенные функции (7 новых разделов)
+// ============================================================
+
+(function () {
+  'use strict';
+
+  // ── ГЛОБАЛЬНОЕ СОСТОЯНИЕ ──────────────────────────────────
+  const state = {
+    mapFilter: 'all',
+    mapPopup: null,
+    basePlanner: { selected: null, grid: {}, buildings: [] },
+    techLearned: JSON.parse(localStorage.getItem('pw_tech') || '{}'),
+    techFilter: 'all',
+    techZoom: 1,
+    foodGoal: 'work',
+    breedPal1: null,
+    breedPal2: null,
+    breedMode: 'forward',  // 'forward' | 'reverse'
+    goldSort: 'income',
+    bossExpanded: {},
+  };
+
+  // ─── УТИЛИТЫ ──────────────────────────────────────────────
+  function el(tag, cls, html) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function qs(sel, ctx) { return (ctx || document).querySelector(sel); }
+  function qsa(sel, ctx) { return [...(ctx || document).querySelectorAll(sel)]; }
+
+  // ─── ВСТАВКА ВКЛАДОК И СЕКЦИЙ ─────────────────────────────
+  function insertTabsAndSections() {
+    const tabsInner = qs('.tabs-inner');
+    const main = qs('.main');
+
+    const newTabs = [
+      { id: 'breeding-calc', label: '🧮 Калькулятор' },
+      { id: 'map',           label: '📍 Карта' },
+      { id: 'food-calc',     label: '🍽️ Еда' },
+      { id: 'base-planner',  label: '🏗️ Планировщик' },
+      { id: 'tech-tree',     label: '📊 Технологии' },
+      { id: 'bosses',        label: '🎯 Боссы' },
+      { id: 'gold',          label: '💰 Золото' },
+    ];
+
+    newTabs.forEach(t => {
+      const btn = el('button', 'tab-btn', t.label);
+      btn.dataset.tab = t.id;
+      tabsInner.appendChild(btn);
+
+      const sec = el('div', 'section');
+      sec.id = t.id;
+      main.appendChild(sec);
+    });
+
+    // Переключение вкладок — обновлённый хендлер для ВСЕХ кнопок
+    qsa('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchAll(btn.dataset.tab));
+    });
+  }
+
+  function switchAll(id) {
+    qsa('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+    qsa('.section').forEach(s => s.classList.toggle('active', s.id === id));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Ленивая инициализация карты
+    if (id === 'map') setTimeout(initMapCanvas, 50);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  1. КАЛЬКУЛЯТОР РАЗВЕДЕНИЯ
+  // ══════════════════════════════════════════════════════════
+  function buildBreedingCalc() {
+    const sec = qs('#breeding-calc');
+    const pals = DATA_EXT.breedingPals.slice().sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+
+    const optionsHtml = pals.map(p =>
+      `<option value="${p.name}">${p.name} (${p.eng}) — Мощь: ${p.power}</option>`
+    ).join('');
+
+    sec.innerHTML = `
+      <div class="section-header">
+        <h2>🧮 Калькулятор разведения</h2>
+        <p>Выбери двух палов и узнай их потомка. Учитываются особые комбинации.</p>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="sub-tab active" id="breedForwardBtn" onclick="window._breedMode('forward')">🔀 Кто получится?</button>
+        <button class="sub-tab" id="breedReverseBtn" onclick="window._breedMode('reverse')">🔍 Кто нужен для...?</button>
+      </div>
+
+      <!-- ПРЯМОЙ: 2 пала → потомок -->
+      <div id="breedForwardPanel">
+        <div class="info-box">⚡ Формула: <code>Пол((Мощь1 + Мощь2 + 1) / 2)</code> → ищем ближайшего пала</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:20px">
+          <div>
+            <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">Родитель 1</label>
+            <select id="breedP1" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px">
+              <option value="">— Выбери пала —</option>${optionsHtml}
+            </select>
+          </div>
+          <div style="text-align:center;font-size:28px;color:var(--accent)">×</div>
+          <div>
+            <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">Родитель 2</label>
+            <select id="breedP2" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px">
+              <option value="">— Выбери пала —</option>${optionsHtml}
+            </select>
+          </div>
+        </div>
+        <div id="breedResult"></div>
+      </div>
+
+      <!-- ОБРАТНЫЙ: цель → пары -->
+      <div id="breedReversePanel" style="display:none">
+        <div class="info-box">🔍 Выбери желаемого потомка и узнай все возможные пары родителей</div>
+        <div style="margin-bottom:20px">
+          <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">Желаемый потомок</label>
+          <select id="breedTarget" style="width:100%;max-width:400px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px">
+            <option value="">— Выбери цель —</option>${optionsHtml}
+          </select>
+        </div>
+        <div id="breedReverseResult"></div>
+      </div>
+
+      <!-- Особые комбинации -->
+      <div class="section-header" style="margin-top:32px">
+        <h2>⭐ Особые фиксированные комбинации</h2>
+        <p>Эти пары дают конкретного потомка вне зависимости от формулы мощи</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Родитель 1</th><th></th><th>Родитель 2</th><th>→</th><th>Результат</th><th>Зачем</th></tr></thead>
+          <tbody>
+            ${DATA_EXT.specialBreeding.map(s => `
+            <tr>
+              <td><strong>${s.parent1}</strong></td>
+              <td style="color:var(--text2)">×</td>
+              <td><strong>${s.parent2}</strong></td>
+              <td style="color:var(--accent)">→</td>
+              <td><strong style="color:var(--accent)">${s.result}</strong></td>
+              <td style="color:var(--text2)">${s.note}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    // Слушатели для прямого расчёта
+    qs('#breedP1').addEventListener('change', calcBreedForward);
+    qs('#breedP2').addEventListener('change', calcBreedForward);
+    qs('#breedTarget').addEventListener('change', calcBreedReverse);
+  }
+
+  window._breedMode = function(mode) {
+    const isForward = mode === 'forward';
+    qs('#breedForwardPanel').style.display = isForward ? '' : 'none';
+    qs('#breedReversePanel').style.display = isForward ? 'none' : '';
+    qs('#breedForwardBtn').classList.toggle('active', isForward);
+    qs('#breedReverseBtn').classList.toggle('active', !isForward);
+  };
+
+  function calcBreedForward() {
+    const p1name = qs('#breedP1').value;
+    const p2name = qs('#breedP2').value;
+    const out = qs('#breedResult');
+    if (!p1name || !p2name) { out.innerHTML = ''; return; }
+
+    // Проверка особых комбинаций
+    const special = DATA_EXT.specialBreeding.find(s =>
+      (s.parent1 === p1name && s.parent2 === p2name) ||
+      (s.parent1 === p2name && s.parent2 === p1name)
+    );
+
+    if (special) {
+      out.innerHTML = `
+        <div class="tip-box">
+          ⭐ <strong>Особая комбинация!</strong> Эта пара всегда даёт: <strong style="color:var(--accent);font-size:18px">${special.result}</strong>
+          <br><span style="color:var(--text2)">${special.note}</span>
+        </div>`;
+      return;
+    }
+
+    const p1 = DATA_EXT.breedingPals.find(p => p.name === p1name);
+    const p2 = DATA_EXT.breedingPals.find(p => p.name === p2name);
+    if (!p1 || !p2) return;
+
+    const childPower = Math.floor((p1.power + p2.power + 1) / 2);
+
+    // Найти 3 ближайших
+    const sorted = DATA_EXT.breedingPals
+      .filter(p => p.name !== p1name && p.name !== p2name)
+      .map(p => ({ ...p, diff: Math.abs(p.power - childPower) }))
+      .sort((a, b) => a.diff - b.diff);
+
+    const top = sorted.slice(0, 3);
+    const best = top[0];
+
+    out.innerHTML = `
+      <div style="background:var(--bg2);border:2px solid var(--accent);border-radius:12px;padding:20px;margin-bottom:16px;text-align:center">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Мощь потомка: <strong style="color:var(--accent)">${childPower}</strong></div>
+        <div style="margin-bottom:10px">${(typeof palImgTag === 'function') ? palImgTag(best.eng, 96, best.name) : '🌐'}</div>
+        <div style="font-size:28px;font-weight:800;color:var(--text)">${best.name}</div>
+        <div style="font-size:13px;color:var(--text2)">${best.eng} — Мощь: ${best.power}</div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Ближайшие варианты:</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${top.map((p, i) => `
+        <div style="flex:1;min-width:180px;background:var(--bg3);border:1px solid ${i===0?'var(--accent)':'var(--border)'};border-radius:8px;padding:14px;text-align:center">
+          <div style="margin-bottom:8px">${(typeof palImgTag === 'function') ? palImgTag(p.eng, 56, p.name) : ''}</div>
+          <div style="font-weight:700;font-size:${i===0?'16px':'14px'}">${p.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${p.eng}</div>
+          <div style="font-size:12px;margin-top:4px">Мощь: <strong style="color:var(--accent)">${p.power}</strong></div>
+          <div style="font-size:11px;color:var(--text2)">Отклонение: ±${p.diff}</div>
+        </div>`).join('')}
+      </div>`;
+  }
+
+  function calcBreedReverse() {
+    const targetName = qs('#breedTarget').value;
+    const out = qs('#breedReverseResult');
+    if (!targetName) { out.innerHTML = ''; return; }
+
+    const target = DATA_EXT.breedingPals.find(p => p.name === targetName);
+    if (!target) return;
+
+    // Особые комбинации для цели
+    const specials = DATA_EXT.specialBreeding.filter(s => s.result === targetName);
+
+    // Все пары через формулу (ограничим до 12)
+    const pairs = [];
+    const pals = DATA_EXT.breedingPals;
+    for (let i = 0; i < pals.length; i++) {
+      for (let j = i; j < pals.length; j++) {
+        const childPower = Math.floor((pals[i].power + pals[j].power + 1) / 2);
+        const closest = pals.reduce((best, p) =>
+          Math.abs(p.power - childPower) < Math.abs(best.power - childPower) ? p : best
+        );
+        if (closest.name === targetName) {
+          pairs.push({ p1: pals[i], p2: pals[j] });
+          if (pairs.length >= 12) break;
+        }
+      }
+      if (pairs.length >= 12) break;
+    }
+
+    out.innerHTML = `
+      ${specials.length ? `
+      <div class="tip-box" style="margin-bottom:16px">
+        ⭐ <strong>Особые комбинации для ${targetName}:</strong><br>
+        ${specials.map(s => `<strong>${s.parent1}</strong> × <strong>${s.parent2}</strong> — ${s.note}`).join('<br>')}
+      </div>` : ''}
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px">
+        Пары через формулу ${pairs.length ? `(найдено ${pairs.length})` : '— не найдено через формулу'}:
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
+        ${pairs.map(({p1,p2}) => `
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px">
+          <strong>${p1.name}</strong> <span style="color:var(--text2)">(${p1.power})</span>
+          <span style="color:var(--accent)"> × </span>
+          <strong>${p2.name}</strong> <span style="color:var(--text2)">(${p2.power})</span>
+        </div>`).join('')}
+        ${!pairs.length && !specials.length ? '<div class="no-results"><div class="icon">😢</div><p>Не найдено пар для этого пала</p></div>' : ''}
+      </div>`;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  2. ИНТЕРАКТИВНАЯ КАРТА
+  // ══════════════════════════════════════════════════════════
+  const TYPE_COLORS = {
+    legendary: '#ffd700',
+    dungeon:   '#f59e0b',
+    merchant:  '#10b981',
+    ore:       '#6b7280',
+    tower:     '#ef4444',
+  };
+  const TYPE_LABELS = {
+    legendary: 'Легендарные палы',
+    dungeon:   'Подземелья',
+    merchant:  'Торговцы',
+    ore:       'Месторождения',
+    tower:     'Башни',
+  };
+
+  function buildMap() {
+    const sec = qs('#map');
+    sec.innerHTML = `
+      <div class="section-header">
+        <h2>📍 Карта мира Palworld</h2>
+        <p>Ключевые локации: легендарные палы, данжи, торговцы, ресурсы, башни</p>
+      </div>
+      <div class="info-box">🗺️ Нажми на маркер для подробной информации. Карта стилизована — координаты приблизительные.</div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="sub-tab active" data-mf="all" onclick="window._mapFilter(this,'all')">Все</button>
+        ${Object.entries(TYPE_LABELS).map(([k,v]) =>
+          `<button class="sub-tab" data-mf="${k}" onclick="window._mapFilter(this,'${k}')" style="border-left:3px solid ${TYPE_COLORS[k]}">${v}</button>`
+        ).join('')}
+      </div>
+
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+        <div style="position:relative;flex-shrink:0">
+          <canvas id="palworldMap" width="660" height="470"
+            style="border:1px solid var(--border);border-radius:10px;cursor:crosshair;max-width:100%">
+          </canvas>
+          <div id="mapPopup" style="display:none;position:absolute;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;min-width:200px;max-width:240px;pointer-events:none;z-index:10;box-shadow:0 4px 20px rgba(0,0,0,.5)"></div>
+        </div>
+
+        <!-- Легенда -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;min-width:180px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:12px">Легенда</div>
+          ${Object.entries(TYPE_LABELS).map(([k,v]) => `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:14px;height:14px;border-radius:50%;background:${TYPE_COLORS[k]};flex-shrink:0"></div>
+            <span style="font-size:12px;color:var(--text2)">${v}</span>
+          </div>`).join('')}
+          <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--text2)">Всего локаций: ${DATA_EXT.mapLocations.length}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Список локаций -->
+      <div style="margin-top:24px">
+        <div class="section-header"><h2>📋 Список всех локаций</h2></div>
+        <div id="mapList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px"></div>
+      </div>
+    `;
+
+    renderMapList('all');
+  }
+
+  window._mapFilter = function(btn, f) {
+    qsa('[data-mf]').forEach(b => b.classList.toggle('active', b.dataset.mf === f));
+    state.mapFilter = f;
+    initMapCanvas();
+    renderMapList(f);
+  };
+
+  function renderMapList(filter) {
+    const list = qs('#mapList');
+    if (!list) return;
+    const locs = DATA_EXT.mapLocations.filter(l => filter === 'all' || l.type === filter);
+    list.innerHTML = locs.map(l => `
+      <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid ${TYPE_COLORS[l.type]};border-radius:8px;padding:12px 14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span style="font-size:18px">${l.icon}</span>
+          <strong style="font-size:13px">${l.name}</strong>
+        </div>
+        <div style="font-size:12px;color:var(--text2)">${l.desc}</div>
+      </div>
+    `).join('');
+  }
+
+  function initMapCanvas() {
+    const canvas = qs('#palworldMap');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    // Фон — океан
+    ctx.fillStyle = '#1a3a5c';
+    ctx.fillRect(0, 0, W, H);
+
+    // Регионы карты (стилизовано)
+    const regions = [
+      { x: 80, y: 200, w: 500, h: 230, color: '#2d5a1b', label: 'Центральные луга' },
+      { x: 100, y: 50,  w: 460, h: 180, color: '#3a6b2a', label: 'Северные леса' },
+      { x: 80, y: 30,   w: 240, h: 200, color: '#c8d8e8', label: 'Снежные горы' },
+      { x: 350, y: 320, w: 280, h: 130, color: '#c4a265', label: 'Пустыня' },
+      { x: 500, y: 60,  w: 160, h: 200, color: '#8b2800', label: 'Вулкан' },
+    ];
+
+    regions.forEach(r => {
+      ctx.fillStyle = r.color;
+      roundRect(ctx, r.x, r.y, r.w, r.h, 12);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(r.label, r.x + r.w / 2, r.y + r.h / 2);
+    });
+
+    // Граница карты
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, W - 2, H - 2);
+
+    // Маркеры
+    const filter = state.mapFilter;
+    const locs = DATA_EXT.mapLocations.filter(l => filter === 'all' || l.type === filter);
+
+    locs.forEach(loc => {
+      const r = 9;
+      ctx.beginPath();
+      ctx.arc(loc.x, loc.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = TYPE_COLORS[loc.type];
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#000';
+      ctx.fillText(loc.icon, loc.x, loc.y);
+    });
+
+    // Клик на маркер
+    canvas.onclick = function(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const my = (e.clientY - rect.top) * scaleY;
+
+      const hit = locs.find(l => Math.hypot(l.x - mx, l.y - my) < 14);
+      const popup = qs('#mapPopup');
+      if (hit) {
+        popup.innerHTML = `
+          <div style="font-size:16px;margin-bottom:4px">${hit.icon} <strong>${hit.name}</strong></div>
+          <div style="font-size:11px;color:${TYPE_COLORS[hit.type]};margin-bottom:6px;text-transform:uppercase">${TYPE_LABELS[hit.type]}</div>
+          <div style="font-size:12px;color:#8b949e">${hit.desc}</div>`;
+        // Позиция popup с учётом scale
+        const px = (hit.x / scaleX) + 14;
+        const py = Math.max(10, (hit.y / scaleY) - 40);
+        popup.style.left = px + 'px';
+        popup.style.top = py + 'px';
+        popup.style.display = 'block';
+      } else {
+        popup.style.display = 'none';
+      }
+    };
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  3. КАЛЬКУЛЯТОР ЕДЫ
+  // ══════════════════════════════════════════════════════════
+  function buildFoodCalc() {
+    const sec = qs('#food-calc');
+    sec.innerHTML = `
+      <div class="section-header">
+        <h2>🍽️ Калькулятор еды</h2>
+        <p>Подбери оптимальную еду для палов по твоей цели</p>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Цель:</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="sub-tab active" onclick="window._foodGoal(this,'work')">⚡ Максимальная работа</button>
+          <button class="sub-tab" onclick="window._foodGoal(this,'san')">💚 Восстановление SAN</button>
+          <button class="sub-tab" onclick="window._foodGoal(this,'atk')">⚔️ Атака</button>
+          <button class="sub-tab" onclick="window._foodGoal(this,'def')">🛡️ Защита</button>
+          <button class="sub-tab" onclick="window._foodGoal(this,'auto')">🤖 Автоматизируемое</button>
+          <button class="sub-tab" onclick="window._foodGoal(this,'all')">📋 Все продукты</button>
+        </div>
+      </div>
+
+      <div id="foodGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
+    `;
+
+    renderFoodCalc('work');
+  }
+
+  window._foodGoal = function(btn, goal) {
+    qsa('#food-calc .sub-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.foodGoal = goal;
+    renderFoodCalc(goal);
+  };
+
+  function renderFoodCalc(goal) {
+    const grid = qs('#foodGrid');
+    if (!grid) return;
+
+    let foods = [...DATA_EXT.foods];
+
+    if (goal === 'work') foods = foods.filter(f => f.workSpeed > 0).sort((a,b) => b.workSpeed - a.workSpeed);
+    else if (goal === 'san')  foods = foods.sort((a,b) => b.san - a.san);
+    else if (goal === 'atk')  foods = foods.filter(f => f.atkBonus > 0).sort((a,b) => b.atkBonus - a.atkBonus);
+    else if (goal === 'def')  foods = foods.filter(f => f.defBonus > 0).sort((a,b) => b.defBonus - a.defBonus);
+    else if (goal === 'auto') foods = foods.filter(f => f.automate).sort((a,b) => b.workSpeed - a.workSpeed);
+    else foods.sort((a,b) => b.nutrition - a.nutrition);
+
+    if (!foods.length) {
+      grid.innerHTML = '<div class="no-results"><div class="icon">🍽️</div><p>Нет блюд для выбранной цели</p></div>';
+      return;
+    }
+
+    grid.innerHTML = foods.map(f => {
+      const diffColors = ['', '#10b981', '#f0c332', '#f59e0b', '#ef4444', '#a855f7'];
+      const diffLabels = ['', 'Очень легко', 'Легко', 'Средне', 'Сложно', 'Хардкор'];
+      return `
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;transition:.18s" class="pal-card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <span style="font-size:28px">${f.icon}</span>
+          <div>
+            <div style="font-weight:700;font-size:15px">${f.name}</div>
+            <div style="font-size:11px;color:${diffColors[f.difficulty]}">● ${diffLabels[f.difficulty]}</div>
+          </div>
+          ${f.automate ? '<span style="margin-left:auto;font-size:11px;background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3);padding:2px 8px;border-radius:12px">Авто</span>' : ''}
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+          ${foodStat('🍖 Сытость', f.nutrition, 250)}
+          ${foodStat('💚 SAN', f.san, 30)}
+          ${foodStat('⚡ Работа', f.workSpeed, 50, '%')}
+        </div>
+
+        ${f.atkBonus ? `<div style="margin-bottom:8px"><span class="badge badge-advanced">⚔️ Атака +${f.atkBonus}%</span></div>` : ''}
+        ${f.defBonus ? `<div style="margin-bottom:8px"><span class="badge badge-intermediate">🛡️ Защита +${f.defBonus}%</span></div>` : ''}
+        ${f.effect ? `<div style="font-size:12px;color:var(--accent3);margin-bottom:8px">✨ ${f.effect}</div>` : ''}
+
+        <div style="background:var(--bg3);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--text2)">
+          📋 <strong>Рецепт:</strong> ${f.recipe}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function foodStat(label, val, max, suffix='') {
+    const pct = Math.min(100, (val / max) * 100);
+    const color = pct > 70 ? '#10b981' : pct > 40 ? '#f0c332' : '#6b7280';
+    return `
+    <div>
+      <div style="font-size:10px;color:var(--text2);margin-bottom:3px">${label}</div>
+      <div style="background:var(--bg4);border-radius:4px;height:6px;overflow:hidden;margin-bottom:3px">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:4px"></div>
+      </div>
+      <div style="font-size:12px;font-weight:600">${val}${suffix}</div>
+    </div>`;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  4. ПЛАНИРОВЩИК БАЗЫ
+  // ══════════════════════════════════════════════════════════
+  const BUILDINGS = [
+    { id: 'workbench', name: 'Верстак',        w: 2, h: 2, color: '#6b7280', emoji: '🔨' },
+    { id: 'feedbox',   name: 'Кормушка',        w: 1, h: 2, color: '#10b981', emoji: '🍖' },
+    { id: 'hotspring', name: 'Горячий источник',w: 2, h: 2, color: '#3b82f6', emoji: '♨️' },
+    { id: 'chest',     name: 'Сундук',          w: 1, h: 1, color: '#92400e', emoji: '📦' },
+    { id: 'ranch',     name: 'Ранчо',           w: 3, h: 3, color: '#d97706', emoji: '🐄' },
+    { id: 'breeding',  name: 'Ферма разведения',w: 3, h: 2, color: '#ec4899', emoji: '🧬' },
+    { id: 'power',     name: 'Электростанция',  w: 2, h: 2, color: '#eab308', emoji: '⚡' },
+    { id: 'monitor',   name: 'Стойка монит.',   w: 1, h: 1, color: '#f59e0b', emoji: '📋' },
+    { id: 'medical',   name: 'Медстанция',      w: 2, h: 2, color: '#e2e8f0', emoji: '💊' },
+  ];
+
+  const GRID_W = 20, GRID_H = 15, CELL = 36;
+  let bpGrid = [];     // [row][col] = buildingId or null
+  let bpPlaced = [];   // [{bid, r, c, w, h, id}]
+  let bpSelected = null;
+  let bpIdCounter = 0;
+
+  function buildBasePlanner() {
+    const sec = qs('#base-planner');
+
+    const sidebar = BUILDINGS.map(b => `
+      <div class="bp-item" data-bid="${b.id}" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.18s" onclick="window._bpSelect('${b.id}')">
+        <span style="font-size:20px">${b.emoji}</span>
+        <div>
+          <div style="font-size:13px;font-weight:600">${b.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${b.w}×${b.h} клетки</div>
+        </div>
+      </div>
+    `).join('');
+
+    sec.innerHTML = `
+      <div class="section-header">
+        <h2>🏗️ Планировщик базы</h2>
+        <p>Визуальная расстановка зданий. ЛКМ — поставить, ПКМ — убрать здание</p>
+      </div>
+      <div class="tip-box">🎯 Выбери здание слева → кликни на сетку для размещения. Правый клик убирает здание. Цель — минимизировать расстояния транспортировки.</div>
+
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+        <!-- Сайдбар зданий -->
+        <div style="width:200px;flex-shrink:0">
+          <div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Здания</div>
+          <div id="bpSidebar" style="display:flex;flex-direction:column;gap:6px">${sidebar}</div>
+          <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+            <button onclick="window._bpClear()" style="width:100%;background:rgba(248,81,73,.12);border:1px solid rgba(248,81,73,.3);color:#f85149;border-radius:6px;padding:8px;cursor:pointer;font-size:13px">🗑️ Очистить всё</button>
+          </div>
+          <div id="bpStats" style="margin-top:12px;font-size:12px;color:var(--text2)"></div>
+        </div>
+
+        <!-- Сетка -->
+        <div style="overflow:auto;flex:1">
+          <div id="bpGridWrap" style="position:relative;display:inline-block;border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:crosshair">
+            <canvas id="bpCanvas" width="${GRID_W * CELL}" height="${GRID_H * CELL}"></canvas>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-top:8px">Размер базы: ${GRID_W}×${GRID_H} клеток</div>
+        </div>
+      </div>
+    `;
+
+    // Инициализация сетки
+    bpGrid = Array.from({ length: GRID_H }, () => new Array(GRID_W).fill(null));
+    bpPlaced = [];
+    bpSelected = null;
+
+    const canvas = qs('#bpCanvas');
+    canvas.addEventListener('click', bpHandleClick);
+    canvas.addEventListener('contextmenu', e => { e.preventDefault(); bpHandleRightClick(e); });
+
+    bpDraw();
+  }
+
+  window._bpSelect = function(bid) {
+    bpSelected = bid;
+    qsa('.bp-item').forEach(el => {
+      el.style.borderColor = el.dataset.bid === bid ? 'var(--accent)' : 'var(--border)';
+      el.style.background  = el.dataset.bid === bid ? 'rgba(230,126,34,.1)' : 'var(--bg3)';
+    });
+  };
+
+  window._bpClear = function() {
+    bpGrid = Array.from({ length: GRID_H }, () => new Array(GRID_W).fill(null));
+    bpPlaced = [];
+    bpDraw();
+    updateBpStats();
+  };
+
+  function bpHandleClick(e) {
+    if (!bpSelected) return;
+    const b = BUILDINGS.find(b => b.id === bpSelected);
+    if (!b) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const col = Math.floor((e.clientX - rect.left) / CELL);
+    const row = Math.floor((e.clientY - rect.top) / CELL);
+
+    if (col + b.w > GRID_W || row + b.h > GRID_H) return;
+
+    // Проверка коллизий
+    for (let r = row; r < row + b.h; r++)
+      for (let c = col; c < col + b.w; c++)
+        if (bpGrid[r][c]) return;
+
+    const uid = ++bpIdCounter;
+    for (let r = row; r < row + b.h; r++)
+      for (let c = col; c < col + b.w; c++)
+        bpGrid[r][c] = uid;
+
+    bpPlaced.push({ bid: b.id, r: row, c: col, w: b.w, h: b.h, uid });
+    bpDraw();
+    updateBpStats();
+  }
+
+  function bpHandleRightClick(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const col = Math.floor((e.clientX - rect.left) / CELL);
+    const row = Math.floor((e.clientY - rect.top) / CELL);
+    if (row < 0 || row >= GRID_H || col < 0 || col >= GRID_W) return;
+    const uid = bpGrid[row][col];
+    if (!uid) return;
+
+    const idx = bpPlaced.findIndex(p => p.uid === uid);
+    if (idx === -1) return;
+    const p = bpPlaced[idx];
+    for (let r = p.r; r < p.r + p.h; r++)
+      for (let c = p.c; c < p.c + p.w; c++)
+        bpGrid[r][c] = null;
+
+    bpPlaced.splice(idx, 1);
+    bpDraw();
+    updateBpStats();
+  }
+
+  function bpDraw() {
+    const canvas = qs('#bpCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = GRID_W * CELL, H = GRID_H * CELL;
+
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, H);
+
+    // Сетка
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1;
+    for (let r = 0; r <= GRID_H; r++) {
+      ctx.beginPath(); ctx.moveTo(0, r * CELL); ctx.lineTo(W, r * CELL); ctx.stroke();
+    }
+    for (let c = 0; c <= GRID_W; c++) {
+      ctx.beginPath(); ctx.moveTo(c * CELL, 0); ctx.lineTo(c * CELL, H); ctx.stroke();
+    }
+
+    // Здания
+    bpPlaced.forEach(p => {
+      const b = BUILDINGS.find(b => b.id === p.bid);
+      if (!b) return;
+      const x = p.c * CELL, y = p.r * CELL;
+      const bw = p.w * CELL, bh = p.h * CELL;
+
+      ctx.fillStyle = b.color + '33';
+      ctx.fillRect(x + 1, y + 1, bw - 2, bh - 2);
+      ctx.strokeStyle = b.color;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 1, y + 1, bw - 2, bh - 2);
+
+      ctx.font = `${Math.min(22, Math.min(bw, bh) * 0.5)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(b.emoji, x + bw / 2, y + bh / 2);
+    });
+  }
+
+  function updateBpStats() {
+    const statsEl = qs('#bpStats');
+    if (!statsEl) return;
+    const counts = {};
+    bpPlaced.forEach(p => { counts[p.bid] = (counts[p.bid] || 0) + 1; });
+    const lines = Object.entries(counts).map(([bid, n]) => {
+      const b = BUILDINGS.find(b => b.id === bid);
+      return `${b.emoji} ${b.name}: <strong>${n}</strong>`;
+    });
+    statsEl.innerHTML = lines.length
+      ? '<div style="font-size:12px;color:var(--text2);margin-bottom:6px">Размещено:</div>' + lines.map(l => `<div style="margin-bottom:4px">${l}</div>`).join('')
+      : '';
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  5. ДЕРЕВО ТЕХНОЛОГИЙ
+  // ══════════════════════════════════════════════════════════
+  const CAT_COLORS = {
+    'Крафт':     '#f59e0b',
+    'Еда':       '#10b981',
+    'База':      '#3b82f6',
+    'Поимка':    '#a855f7',
+    'Разведение':'#ec4899',
+    'Прокачка':  '#ef4444',
+    'Выживание': '#6b7280',
+    'Рейды':     '#ffd700',
+  };
+
+  function buildTechTree() {
+    const sec = qs('#tech-tree');
+    const cats = [...new Set(DATA_EXT.techTree.map(t => t.cat))];
+
+    sec.innerHTML = `
+      <div class="section-header">
+        <h2>📊 Дерево технологий</h2>
+        <p>Приоритеты изучения — от старта до эндгейма. Кликай для отметки изученного.</p>
+      </div>
+      <div class="tip-box">💡 Кликни на технологию чтобы отметить её как изученную. Прогресс сохраняется в браузере.</div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+        <button class="sub-tab active" onclick="window._techFilter(this,'all')">Все</button>
+        ${cats.map(c => `<button class="sub-tab" onclick="window._techFilter(this,'${c}')" style="border-left:3px solid ${CAT_COLORS[c]||'#666'}">${c}</button>`).join('')}
+      </div>
+
+      <div id="techGrid"></div>
+
+      <div style="margin-top:16px;display:flex;gap:16px;font-size:12px;color:var(--text2);flex-wrap:wrap">
+        <span>🟠 Высокий приоритет</span>
+        <span>🔵 Средний приоритет</span>
+        <span>⚫ Низкий приоритет</span>
+        <span>✅ Изучено</span>
+      </div>
+    `;
+
+    renderTechGrid('all');
+  }
+
+  window._techFilter = function(btn, cat) {
+    qsa('#tech-tree .sub-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.techFilter = cat;
+    renderTechGrid(cat);
+  };
+
+  function renderTechGrid(cat) {
+    const grid = qs('#techGrid');
+    if (!grid) return;
+
+    const tiers = [1, 2, 3, 4, 5];
+    const tierNames = ['Tier 1: Уровень 1–5', 'Tier 2: Уровень 6–15', 'Tier 3: Уровень 16–25', 'Tier 4: Уровень 26–40', 'Tier 5: Уровень 41+'];
+
+    grid.innerHTML = tiers.map((tier, ti) => {
+      const items = DATA_EXT.techTree.filter(t => t.tier === tier && (cat === 'all' || t.cat === cat));
+      if (!items.length) return '';
+      return `
+        <div style="margin-bottom:24px">
+          <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">
+            ${tierNames[ti]}
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
+            ${items.map(t => {
+              const learned = !!state.techLearned[t.id];
+              const pColor = t.priority === 'high' ? 'var(--accent)' : t.priority === 'medium' ? 'var(--accent2)' : 'var(--text2)';
+              const catColor = CAT_COLORS[t.cat] || '#666';
+              return `
+              <div class="tech-node" data-tid="${t.id}" onclick="window._techToggle('${t.id}')" style="
+                background:${learned ? 'rgba(16,185,129,.1)' : 'var(--bg2)'};
+                border:1px solid ${learned ? '#10b981' : 'var(--border)'};
+                border-left:3px solid ${catColor};
+                border-radius:8px;padding:12px;cursor:pointer;transition:.18s;position:relative
+              ">
+                ${learned ? '<span style="position:absolute;top:8px;right:8px;color:#10b981;font-size:14px">✅</span>' : ''}
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                  <span style="font-size:8px;color:${pColor}">●</span>
+                  <strong style="font-size:13px">${t.name}</strong>
+                </div>
+                <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+                  <span style="font-size:11px;background:var(--bg3);border:1px solid var(--border);padding:1px 7px;border-radius:4px;color:var(--accent)">Ур.${t.level}</span>
+                  <span style="font-size:11px;background:var(--bg3);border:1px solid var(--border);padding:1px 7px;border-radius:4px;color:var(--text2)">${t.pts} очк.</span>
+                  <span style="font-size:11px;padding:1px 7px;border-radius:4px;color:${catColor};background:${catColor}22">${t.cat}</span>
+                </div>
+                <div style="font-size:12px;color:var(--text2);line-height:1.5">${t.tip}</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  window._techToggle = function(id) {
+    state.techLearned[id] = !state.techLearned[id];
+    if (!state.techLearned[id]) delete state.techLearned[id];
+    localStorage.setItem('pw_tech', JSON.stringify(state.techLearned));
+    renderTechGrid(state.techFilter);
+  };
+
+  // ══════════════════════════════════════════════════════════
+  //  6. ГАЙДЫ ПО БОССАМ
+  // ══════════════════════════════════════════════════════════
+  const DANGER_COLORS = { low: '#10b981', medium: '#f0c332', high: '#ef4444', critical: '#a855f7' };
+  const DANGER_LABELS = { low: 'Слабая', medium: 'Средняя', high: 'Высокая', critical: '☠️ Смертельно' };
+
+  function buildBosses() {
+    const sec = qs('#bosses');
+    sec.innerHTML = `
+      <div class="section-header">
+        <h2>🎯 Гайды по боссам башен</h2>
+        <p>Слабости, атаки, тактика и лучшие контр-палы для каждой башни</p>
+      </div>
+      <div class="warn-box">⏱️ Лимит времени на бой в башне: <strong>5 минут</strong>. Не тяни — атакуй непрерывно!</div>
+      <div id="bossCards" style="display:flex;flex-direction:column;gap:16px"></div>
+    `;
+
+    qs('#bossCards').innerHTML = DATA_EXT.bosses.map(b => renderBossCard(b)).join('');
+  }
+
+  function renderBossCard(b) {
+    const stars = '⭐'.repeat(b.difficulty) + '☆'.repeat(5 - b.difficulty);
+    return `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+      <!-- Шапка -->
+      <div style="background:linear-gradient(90deg,${b.elementColor}22,transparent);padding:20px 24px;display:flex;align-items:center;gap:16px;cursor:pointer" onclick="window._bossToggle('${b.id}')">
+        <span style="font-size:36px">${b.icon}</span>
+        <div style="flex:1">
+          <div style="font-size:20px;font-weight:800">${b.name}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+            <span style="font-size:12px;background:rgba(255,255,255,.08);padding:2px 10px;border-radius:12px">Ур. ${b.level}+</span>
+            <span style="font-size:12px;background:${b.elementColor}22;color:${b.elementColor};border:1px solid ${b.elementColor}44;padding:2px 10px;border-radius:12px">${b.element}</span>
+            <span style="font-size:12px;background:var(--bg3);padding:2px 10px;border-radius:12px">Слабость: <strong style="color:${b.weaknessColor}">${b.weakness}</strong></span>
+            <span style="font-size:12px;color:var(--text2)">${stars}</span>
+          </div>
+        </div>
+        <span id="bossArrow_${b.id}" style="color:var(--text2);font-size:18px;transition:.18s">${state.bossExpanded[b.id] ? '▲' : '▼'}</span>
+      </div>
+
+      <!-- Детали -->
+      <div id="bossBody_${b.id}" style="display:${state.bossExpanded[b.id] ? 'block' : 'none'};padding:0 24px 24px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:4px">
+
+          <!-- Атаки -->
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Атаки</div>
+            ${b.attacks.map(a => `
+            <div style="background:var(--bg3);border:1px solid var(--border);border-left:3px solid ${DANGER_COLORS[a.danger]};border-radius:6px;padding:10px 12px;margin-bottom:8px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                <strong style="font-size:13px">${a.name}</strong>
+                <span style="font-size:10px;color:${DANGER_COLORS[a.danger]}">${DANGER_LABELS[a.danger]}</span>
+              </div>
+              <div style="font-size:12px;color:var(--text2)">${a.desc}</div>
+            </div>`).join('')}
+          </div>
+
+          <!-- Советы + Награды + Контр-палы -->
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Советы</div>
+            ${b.tips.map(t => `
+            <div style="display:flex;gap:8px;margin-bottom:8px;font-size:13px">
+              <span style="color:var(--accent3);flex-shrink:0">✓</span>
+              <span style="color:var(--text3)">${t}</span>
+            </div>`).join('')}
+
+            <div style="margin-top:16px">
+              <div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Лучшие контр-палы</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                ${b.counterPals.map(palName => {
+                  // Ищем английское имя в DATA
+                  const palData = (typeof DATA_EXT !== 'undefined' && DATA_EXT.breedingPals)
+                    ? DATA_EXT.breedingPals.find(p => p.name === palName)
+                    : null;
+                  const img = (palData && typeof palImgTag === 'function')
+                    ? palImgTag(palData.eng, 48, palName)
+                    : '';
+                  return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:70px">
+                    ${img}
+                    <span style="font-size:11px;color:var(--text2);text-align:center;line-height:1.3">${palName}</span>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+
+            <div style="margin-top:16px">
+              <div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Награды</div>
+              ${b.rewards.map(r => `<div style="font-size:12px;color:var(--accent3)">• ${r}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  window._bossToggle = function(id) {
+    state.bossExpanded[id] = !state.bossExpanded[id];
+    const body = qs(`#bossBody_${id}`);
+    const arrow = qs(`#bossArrow_${id}`);
+    if (body) body.style.display = state.bossExpanded[id] ? 'block' : 'none';
+    if (arrow) arrow.textContent = state.bossExpanded[id] ? '▲' : '▼';
+  };
+
+  // ══════════════════════════════════════════════════════════
+  //  7. ГИД ПО ЗОЛОТУ
+  // ══════════════════════════════════════════════════════════
+  const INCOME_ORDER = { 'very-high': 0, high: 1, medium: 2, low: 3 };
+
+  function buildGold() {
+    const sec = qs('#gold');
+    sec.innerHTML = `
+      <div class="section-header">
+        <h2>💰 Фарм золота</h2>
+        <p>Лучшие методы от пассивных до эндгейм-производства</p>
+      </div>
+
+      <div class="tip-box">🏆 <strong>Топ совет:</strong> Маус / Маус Кризт на Ранчо + Думуд Гилд в пати — лучший пассивный доход без усилий. Для активного — регулярный фарм данжей за драгоценными камнями.</div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+        <button class="sub-tab active" onclick="window._goldSort(this,'income')">По доходу</button>
+        <button class="sub-tab" onclick="window._goldSort(this,'difficulty')">По сложности</button>
+        <button class="sub-tab" onclick="window._goldSort(this,'passive')">Только пассивные</button>
+        <button class="sub-tab" onclick="window._goldSort(this,'active')">Только активные</button>
+      </div>
+
+      <div id="goldGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px"></div>
+    `;
+
+    renderGoldGrid('income');
+  }
+
+  window._goldSort = function(btn, sort) {
+    qsa('#gold .sub-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.goldSort = sort;
+    renderGoldGrid(sort);
+  };
+
+  function renderGoldGrid(sort) {
+    const grid = qs('#goldGrid');
+    if (!grid) return;
+
+    let items = [...DATA_EXT.goldItems];
+    if (sort === 'income')     items.sort((a, b) => (INCOME_ORDER[a.income] || 9) - (INCOME_ORDER[b.income] || 9));
+    else if (sort === 'difficulty') items.sort((a, b) => a.difficulty - b.difficulty);
+    else if (sort === 'passive')    items = items.filter(i => i.type === 'passive');
+    else if (sort === 'active')     items = items.filter(i => i.type === 'active' || i.type === 'production');
+
+    const incomeColors = { 'very-high': '#ffd700', high: '#10b981', medium: '#f0c332', low: '#6b7280' };
+    const incomeLabels = { 'very-high': '💰💰💰 Очень высокий', high: '💰💰 Высокий', medium: '💰 Средний', low: '• Низкий' };
+    const typeLabels   = { passive: '😴 Пассивный', active: '⚔️ Активный', production: '🏭 Производство' };
+
+    grid.innerHTML = items.map(item => `
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px;transition:.18s" class="pal-card">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
+          <span style="font-size:32px">${item.icon}</span>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:15px">${item.name}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+              <span style="font-size:11px;color:${incomeColors[item.income]||'#fff'}">${incomeLabels[item.income]||''}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <span style="font-size:11px;background:var(--bg3);border:1px solid var(--border);padding:2px 8px;border-radius:12px;color:var(--text2)">${typeLabels[item.type]||item.type}</span>
+          <span style="font-size:11px;background:var(--bg3);border:1px solid var(--border);padding:2px 8px;border-radius:12px;color:var(--text2)">📊 ${item.method}</span>
+        </div>
+        <div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.2);border-radius:6px;padding:8px 12px;margin-bottom:12px">
+          <div style="font-size:11px;color:var(--text2)">Доход</div>
+          <div style="font-size:15px;font-weight:700;color:#ffd700">${item.incomeLabel}</div>
+        </div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.6">${item.tip}</div>
+      </div>
+    `).join('');
+  }
+
+  // ─── ИНИЦИАЛИЗАЦИЯ ────────────────────────────────────────
+  function init() {
+    insertTabsAndSections();
+    buildBreedingCalc();
+    buildMap();
+    buildFoodCalc();
+    buildBasePlanner();
+    buildTechTree();
+    buildBosses();
+    buildGold();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
