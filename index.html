@@ -10,7 +10,14 @@
   <title>Palworld Assistant — Гайды, база, боёвка и калькулятор</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="apple-touch-icon" href="favicon.svg" />
-  <link rel="manifest" href="manifest.json" />
+  <script>
+    if (window.location.protocol.startsWith('http')) {
+      const m = document.createElement('link');
+      m.rel = 'manifest';
+      m.href = 'manifest.json';
+      document.head.appendChild(m);
+    }
+  </script>
   <link rel="stylesheet" href="styles.css?v=1.6.0" />
 </head>
 <body>
@@ -772,7 +779,7 @@
 
 <!-- PWA Service Worker -->
 <script>
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     });

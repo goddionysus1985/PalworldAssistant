@@ -94,8 +94,6 @@
     qsa('.section').forEach(s => s.classList.toggle('active', s.id === id));
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (typeof window._closeSearch === 'function') window._closeSearch();
-    // Ленивая инициализация карты
-    if (id === 'map') setTimeout(initMapCanvas, 50);
   }
 
   window.switchAllExtended = switchAll;
