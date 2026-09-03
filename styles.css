@@ -93,6 +93,44 @@ body {
 .logo-text { font-size: 18px; font-weight: 700; color: var(--text); }
 .logo-text span { color: var(--accent); }
 
+/* --- HEADER NAV ------------------------------------------- */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex: 1;
+  padding: 4px 0;
+}
+.header-nav::-webkit-scrollbar { display: none; }
+.header-link {
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid transparent;
+}
+.header-link:hover {
+  color: var(--text);
+  background: var(--bg3);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.header-link.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(230,126,34,0.3), rgba(243,156,18,0.2));
+  border-color: rgba(230,126,34,0.5);
+  box-shadow: 0 2px 8px rgba(230,126,34,0.25);
+}
+
 /* --- SEARCH ----------------------------------------------- */
 .search-wrap {
   flex: 1;
@@ -773,6 +811,23 @@ button:active, .sub-tab:active, .pill:active {
     padding: 10px 12px 10px 38px;
     font-size: 15px; /* prevent iOS auto-zoom */
     border-radius: 10px;
+  }
+
+  .header-nav {
+    order: 4;
+    width: 100%;
+    gap: 6px;
+    padding: 6px 0 2px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .header-link {
+    font-size: 12px;
+    padding: 5px 9px;
+    background: var(--bg3);
+    border-color: var(--border);
   }
 
   /* Filter pills row */

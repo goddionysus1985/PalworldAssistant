@@ -51,6 +51,19 @@
     qsa('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => switchAll(btn.dataset.tab));
     });
+
+    // Хендлер для ссылок разделов в хедере
+    qsa('.header-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tab = link.dataset.headTab;
+        const cat = link.dataset.headCat;
+        if (cat && typeof window._switchCategory === 'function') {
+          window._switchCategory(cat, false);
+        }
+        switchAll(tab);
+      });
+    });
   }
 
   function switchAll(id) {
@@ -68,6 +81,16 @@
         b.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
       }
     });
+
+    // Синхронизация активной ссылки в хедере
+    qsa('.header-link').forEach(link => {
+      const isHeaderActive = link.dataset.headTab === id;
+      link.classList.toggle('active', isHeaderActive);
+      if (isHeaderActive) {
+        link.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
+      }
+    });
+
     qsa('.section').forEach(s => s.classList.toggle('active', s.id === id));
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (typeof window._closeSearch === 'function') window._closeSearch();
