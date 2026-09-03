@@ -295,49 +295,95 @@
     const sec = qs('#map');
     sec.innerHTML = `
       <div class="section-header">
-        <h2>📍 Карта мира Palworld</h2>
-        <p>Ключевые локации: легендарные палы, данжи, торговцы, ресурсы, башни</p>
-      </div>
-      <div class="info-box">🗺️ Нажми на маркер для подробной информации. Карта стилизована — координаты приблизительные.</div>
-
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-        <button class="sub-tab active" data-mf="all" onclick="window._mapFilter(this,'all')">Все</button>
-        ${Object.entries(TYPE_LABELS).map(([k,v]) =>
-          `<button class="sub-tab" data-mf="${k}" onclick="window._mapFilter(this,'${k}')" style="border-left:3px solid ${TYPE_COLORS[k]}">${v}</button>`
-        ).join('')}
+        <h2>📍 Интерактивная карта Palworld</h2>
+        <p>Официальная подробная карта MapGenie со всеми сундуками, боссами, статуями и точками телепорта</p>
       </div>
 
-      <div class="map-container-flex">
-        <div style="position:relative;flex:1;min-width:280px;max-width:100%">
-          <canvas id="palworldMap" width="660" height="470"
-            style="border:1px solid var(--border);border-radius:10px;cursor:crosshair;width:100%;height:auto;display:block">
-          </canvas>
-          <div id="mapPopup" style="display:none;position:absolute;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;min-width:200px;max-width:260px;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.6)"></div>
+      <!-- Переключатель режимов карты -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+        <button class="sub-tab active" id="mapGenieTabBtn" onclick="window._setMapMode('mapgenie')">🗺️ Карта MapGenie (Все маркеры)</button>
+        <button class="sub-tab" id="mapSchematicTabBtn" onclick="window._setMapMode('schematic')">⚡ Быстрая схема</button>
+        <a href="https://mapgenie.io/palworld/maps/palpagos-islands" target="_blank" rel="noopener noreferrer" class="sub-tab" style="margin-left:auto;text-decoration:none;display:inline-flex;align-items:center;gap:6px;color:var(--accent)">
+          ↗ Открыть на MapGenie.io
+        </a>
+      </div>
+
+      <!-- 1. MAPGENIE INTERACTIVE EMBED -->
+      <div id="mapGenieWrap" style="margin-bottom:24px">
+        <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#0d1117;box-shadow:0 4px 20px rgba(0,0,0,0.4)">
+          <div style="padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--text2)">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="color:#10b981">●</span> <strong>MapGenie: Palpagos Islands</strong> — Сундуки, данжи, боссы, статуи Лифмунка, яйца, торговцы
+            </div>
+            <div style="font-size:11.5px">💡 Зум: колесо мыши / сжатие пальцами</div>
+          </div>
+          <iframe 
+            src="https://mapgenie.io/palworld/maps/palpagos-islands?embed=dark" 
+            style="width:100%;height:750px;min-height:550px;max-height:85vh;border:none;display:block;background:#111" 
+            allowfullscreen 
+            loading="lazy">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- 2. СХЕМАТИЧНАЯ КАРТА (ОФЛАЙН) -->
+      <div id="mapSchematicWrap" style="display:none">
+        <div class="info-box">🗺️ Нажми на маркер для подробной информации. Карта стилизована — координаты приблизительные.</div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+          <button class="sub-tab active" data-mf="all" onclick="window._mapFilter(this,'all')">Все</button>
+          ${Object.entries(TYPE_LABELS).map(([k,v]) =>
+            `<button class="sub-tab" data-mf="${k}" onclick="window._mapFilter(this,'${k}')" style="border-left:3px solid ${TYPE_COLORS[k]}">${v}</button>`
+          ).join('')}
         </div>
 
-        <!-- Легенда -->
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;min-width:180px;flex-shrink:0">
-          <div style="font-size:13px;font-weight:700;margin-bottom:12px">Легенда</div>
-          ${Object.entries(TYPE_LABELS).map(([k,v]) => `
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <div style="width:14px;height:14px;border-radius:50%;background:${TYPE_COLORS[k]};flex-shrink:0"></div>
-            <span style="font-size:12px;color:var(--text2)">${v}</span>
-          </div>`).join('')}
-          <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
-            <div style="font-size:11px;color:var(--text2)">Всего локаций: ${DATA_EXT.mapLocations.length}</div>
+        <div class="map-container-flex">
+          <div style="position:relative;flex:1;min-width:280px;max-width:100%">
+            <canvas id="palworldMap" width="660" height="470"
+              style="border:1px solid var(--border);border-radius:10px;cursor:crosshair;width:100%;height:auto;display:block">
+            </canvas>
+            <div id="mapPopup" style="display:none;position:absolute;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;min-width:200px;max-width:260px;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.6)"></div>
+          </div>
+
+          <!-- Легенда -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;min-width:180px;flex-shrink:0">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px">Легенда</div>
+            ${Object.entries(TYPE_LABELS).map(([k,v]) => `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <div style="width:14px;height:14px;border-radius:50%;background:${TYPE_COLORS[k]};flex-shrink:0"></div>
+              <span style="font-size:12px;color:var(--text2)">${v}</span>
+            </div>`).join('')}
+            <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+              <div style="font-size:11px;color:var(--text2)">Всего локаций: ${DATA_EXT.mapLocations.length}</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Список локаций -->
-      <div style="margin-top:24px">
-        <div class="section-header"><h2>📋 Список всех локаций</h2></div>
-        <div id="mapList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px"></div>
+        <!-- Список локаций -->
+        <div style="margin-top:24px">
+          <div class="section-header"><h2>📋 Список всех локаций</h2></div>
+          <div id="mapList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px"></div>
+        </div>
       </div>
     `;
 
     renderMapList('all');
   }
+
+  window._setMapMode = function(mode) {
+    const isGenie = mode === 'mapgenie';
+    const genieWrap = qs('#mapGenieWrap');
+    const schematicWrap = qs('#mapSchematicWrap');
+    const genieBtn = qs('#mapGenieTabBtn');
+    const schematicBtn = qs('#mapSchematicTabBtn');
+
+    if (genieWrap) genieWrap.style.display = isGenie ? 'block' : 'none';
+    if (schematicWrap) schematicWrap.style.display = isGenie ? 'none' : 'block';
+    if (genieBtn) genieBtn.classList.toggle('active', isGenie);
+    if (schematicBtn) schematicBtn.classList.toggle('active', !isGenie);
+
+    if (!isGenie) setTimeout(initMapCanvas, 50);
+  };
 
   window._mapFilter = function(btn, f) {
     qsa('[data-mf]').forEach(b => b.classList.toggle('active', b.dataset.mf === f));
