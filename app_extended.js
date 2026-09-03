@@ -529,8 +529,8 @@
 
       <!-- Переключатель режимов карты -->
       <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-        <button class="sub-tab active" id="mapGenieTabBtn" onclick="window._setMapMode('mapgenie')">🗺️ Карта MapGenie (Все маркеры)</button>
-        <button class="sub-tab" id="mapSchematicTabBtn" onclick="window._setMapMode('schematic')">⚡ Быстрая схема</button>
+        <button class="sub-tab active" id="mapGenieTabBtn" onclick="window._setMapMode('mapgenie')">🗺️ Интерактивная карта MapGenie</button>
+        <button class="sub-tab" id="mapSchematicTabBtn" onclick="window._setMapMode('schematic')">🧭 GPS-навигатор & Координаты (30+ точек)</button>
         <a href="https://mapgenie.io/palworld/maps/palpagos-islands" target="_blank" rel="noopener noreferrer" class="sub-tab" style="margin-left:auto;text-decoration:none;display:inline-flex;align-items:center;gap:6px;color:var(--accent)">
           ↗ Открыть на MapGenie.io
         </a>
@@ -554,44 +554,31 @@
         </div>
       </div>
 
-      <!-- 2. СХЕМАТИЧНАЯ КАРТА (ОФЛАЙН) -->
+      <!-- 2. НАВИГАТОР ПО КООРДИНАТАМ И ТЕЛЕПОРТАМ -->
       <div id="mapSchematicWrap" style="display:none">
-        <div class="info-box">🗺️ Нажми на маркер для подробной информации. Карта стилизована — координаты приблизительные.</div>
-
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-          <button class="sub-tab active" data-mf="all" onclick="window._mapFilter(this,'all')">Все</button>
-          ${Object.entries(TYPE_LABELS).map(([k,v]) =>
-            `<button class="sub-tab" data-mf="${k}" onclick="window._mapFilter(this,'${k}')" style="border-left:3px solid ${TYPE_COLORS[k]}">${v}</button>`
-          ).join('')}
+        <div class="info-box">
+          🧭 <strong>GPS-навигатор Палпагоса:</strong> Быстрый поиск точных координат, точек быстрого перемещения (телепортов) и ориентиров на местности для всех ключевых боссов, шахт и торговцев.
         </div>
 
-        <div class="map-container-flex">
-          <div style="position:relative;flex:1;min-width:280px;max-width:100%">
-            <canvas id="palworldMap" width="660" height="470"
-              style="border:1px solid var(--border);border-radius:10px;cursor:crosshair;width:100%;height:auto;display:block">
-            </canvas>
-            <div id="mapPopup" style="display:none;position:absolute;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;min-width:200px;max-width:260px;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.6)"></div>
-          </div>
-
-          <!-- Легенда -->
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;min-width:180px;flex-shrink:0">
-            <div style="font-size:13px;font-weight:700;margin-bottom:12px">Легенда</div>
-            ${Object.entries(TYPE_LABELS).map(([k,v]) => `
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-              <div style="width:14px;height:14px;border-radius:50%;background:${TYPE_COLORS[k]};flex-shrink:0"></div>
-              <span style="font-size:12px;color:var(--text2)">${v}</span>
-            </div>`).join('')}
-            <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
-              <div style="font-size:11px;color:var(--text2)">Всего локаций: ${DATA_EXT.mapLocations.length}</div>
-            </div>
-          </div>
+        <!-- Поиск по точкам -->
+        <div style="margin-bottom:14px">
+          <input type="search" id="gpsSearchInput" placeholder="🔍 Найти босса, шахту или локацию (например: Анубис, Уголь, Вулкан, Башня)..." 
+            style="width:100%;padding:12px 16px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:14px"
+            oninput="window._filterGpsLocations(this.value)">
         </div>
 
-        <!-- Список локаций -->
-        <div style="margin-top:24px">
-          <div class="section-header"><h2>📋 Список всех локаций</h2></div>
-          <div id="mapList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px"></div>
+        <!-- Категории точек -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+          <button class="sub-tab active" data-mf="all" onclick="window._mapFilter(this,'all')">Все точки</button>
+          <button class="sub-tab" data-mf="legendary" onclick="window._mapFilter(this,'legendary')">👑 Боссы и Легендарки</button>
+          <button class="sub-tab" data-mf="merchant" onclick="window._mapFilter(this,'merchant')">🛒 Все торговцы</button>
+          <button class="sub-tab" data-mf="tower" onclick="window._mapFilter(this,'tower')">🗼 Башни синдикатов</button>
+          <button class="sub-tab" data-mf="ore" onclick="window._mapFilter(this,'ore')">⛏️ Залежи руды и угля</button>
+          <button class="sub-tab" data-mf="dungeon" onclick="window._mapFilter(this,'dungeon')">🚪 Подземелья</button>
         </div>
+
+        <!-- Список локаций в виде аккуратных карточек с координатами -->
+        <div id="mapList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px"></div>
       </div>
     `;
 
@@ -609,134 +596,133 @@
     if (schematicWrap) schematicWrap.style.display = isGenie ? 'none' : 'block';
     if (genieBtn) genieBtn.classList.toggle('active', isGenie);
     if (schematicBtn) schematicBtn.classList.toggle('active', !isGenie);
-
-    if (!isGenie) setTimeout(initMapCanvas, 50);
   };
+
+  let activeGpsFilter = 'all';
+  let activeGpsSearch = '';
 
   window._mapFilter = function(btn, f) {
     qsa('[data-mf]').forEach(b => b.classList.toggle('active', b.dataset.mf === f));
-    state.mapFilter = f;
-    initMapCanvas();
-    renderMapList(f);
+    activeGpsFilter = f;
+    renderMapList(activeGpsFilter);
+  };
+
+  window._filterGpsLocations = function(q) {
+    activeGpsSearch = q.toLowerCase().trim();
+    renderMapList(activeGpsFilter);
   };
 
   function renderMapList(filter) {
     const list = qs('#mapList');
     if (!list) return;
-    const locs = DATA_EXT.mapLocations.filter(l => filter === 'all' || l.type === filter);
-    list.innerHTML = locs.map(l => `
-      <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid ${TYPE_COLORS[l.type]};border-radius:8px;padding:12px 14px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <span style="font-size:18px">${l.icon}</span>
-          <strong style="font-size:13px">${l.name}</strong>
+    // Собираем расширенный список всех точек Палпагоса
+    const items = [];
+
+    // 1. Альфа-боссы и Легендарки из TARGET_LOCATIONS
+    Object.entries(TARGET_LOCATIONS).forEach(([name, data]) => {
+      items.push({
+        id: 'tgt_' + name,
+        name: data.name || name,
+        type: 'legendary',
+        coords: data.coords,
+        teleport: data.teleport,
+        desc: data.desc,
+        searchQuery: data.searchQuery || name,
+        icon: data.icon || '👑',
+        color: '#ffd700'
+      });
+    });
+
+    // 2. Торговцы из MERCHANTS_DATA
+    if (typeof MERCHANTS_DATA !== 'undefined') {
+      MERCHANTS_DATA.forEach(m => {
+        items.push({
+          id: m.id,
+          name: m.name,
+          type: 'merchant',
+          coords: m.coords,
+          teleport: m.fastTravel,
+          desc: m.desc + ' ' + m.location,
+          searchQuery: m.location,
+          icon: m.type === 'red' ? '🔴' : m.type === 'blue' ? '🔵' : '🏴‍☠️',
+          color: '#10b981'
+        });
+      });
+    }
+
+    // 3. Башни, шахты и данжи из DATA_EXT.mapLocations
+    if (typeof DATA_EXT !== 'undefined' && DATA_EXT.mapLocations) {
+      DATA_EXT.mapLocations.forEach(ml => {
+        if (ml.type === 'tower' || ml.type === 'ore' || ml.type === 'dungeon') {
+          items.push({
+            id: ml.id,
+            name: ml.name,
+            type: ml.type,
+            coords: ml.type === 'tower' ? 'Башня с боссом' : 'Месторождение региона',
+            teleport: ml.desc,
+            desc: ml.desc,
+            searchQuery: ml.name,
+            icon: ml.icon,
+            color: TYPE_COLORS[ml.type] || '#f59e0b'
+          });
+        }
+      });
+    }
+
+    // Фильтрация
+    const filtered = items.filter(it => {
+      const matchCat = (filter === 'all') || (it.type === filter);
+      if (!matchCat) return false;
+      if (!activeGpsSearch) return true;
+      return it.name.toLowerCase().includes(activeGpsSearch) ||
+             it.desc.toLowerCase().includes(activeGpsSearch) ||
+             (it.teleport && it.teleport.toLowerCase().includes(activeGpsSearch)) ||
+             (it.coords && it.coords.toLowerCase().includes(activeGpsSearch));
+    });
+
+    if (!filtered.length) {
+      list.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--text2);background:var(--bg2);border-radius:12px;border:1px dashed var(--border)">
+          <div style="font-size:28px;margin-bottom:6px">🧭</div>
+          <div style="font-weight:700">Локации не найдены</div>
+          <div style="font-size:12px;margin-top:4px">Попробуйте изменить категорию или поисковый запрос</div>
         </div>
-        <div style="font-size:12px;color:var(--text2)">${l.desc}</div>
+      `;
+      return;
+    }
+
+    list.innerHTML = filtered.map(it => `
+      <div class="card" style="border-top:3px solid ${it.color};display:flex;flex-direction:column;justify-content:space-between;padding:14px">
+        <div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0">
+              <span style="font-size:20px">${it.icon}</span>
+              <strong style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</strong>
+            </div>
+            <span class="badge" style="background:${it.color}22;color:${it.color};font-size:10.5px;white-space:nowrap">
+              ${TYPE_LABELS[it.type] || it.type}
+            </span>
+          </div>
+
+          <div style="background:var(--bg3);padding:8px 10px;border-radius:6px;border:1px solid var(--border);margin-bottom:8px">
+            <div style="font-size:10.5px;color:var(--text2);text-transform:uppercase;font-weight:700">Координаты в игре:</div>
+            <div style="font-size:14px;font-weight:800;color:#ffd700;margin-top:1px">${it.coords}</div>
+          </div>
+
+          <div style="font-size:11.5px;color:var(--text2);margin-bottom:6px">
+            ⚡ <strong>Телепорт:</strong> <span style="color:var(--text)">${it.teleport}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text);line-height:1.4">${it.desc}</div>
+        </div>
+
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)">
+          <button class="sub-tab active" style="width:100%;padding:7px 10px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px" 
+            onclick="window._jumpToMap('${it.name.split(' (')[0]}')">
+            🎯 Показать в фокусе карты →
+          </button>
+        </div>
       </div>
     `).join('');
-  }
-
-  function initMapCanvas() {
-    const canvas = qs('#palworldMap');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-
-    // Фон — океан
-    ctx.fillStyle = '#1a3a5c';
-    ctx.fillRect(0, 0, W, H);
-
-    // Регионы карты (стилизовано)
-    const regions = [
-      { x: 80, y: 200, w: 500, h: 230, color: '#2d5a1b', label: 'Центральные луга' },
-      { x: 100, y: 50,  w: 460, h: 180, color: '#3a6b2a', label: 'Северные леса' },
-      { x: 80, y: 30,   w: 240, h: 200, color: '#c8d8e8', label: 'Снежные горы' },
-      { x: 350, y: 320, w: 280, h: 130, color: '#c4a265', label: 'Пустыня' },
-      { x: 500, y: 60,  w: 160, h: 200, color: '#8b2800', label: 'Вулкан' },
-    ];
-
-    regions.forEach(r => {
-      ctx.fillStyle = r.color;
-      roundRect(ctx, r.x, r.y, r.w, r.h, 12);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.12)';
-      ctx.font = '11px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(r.label, r.x + r.w / 2, r.y + r.h / 2);
-    });
-
-    // Граница карты
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, W - 2, H - 2);
-
-    // Маркеры
-    const filter = state.mapFilter;
-    const locs = DATA_EXT.mapLocations.filter(l => filter === 'all' || l.type === filter);
-
-    locs.forEach(loc => {
-      const r = 9;
-      ctx.beginPath();
-      ctx.arc(loc.x, loc.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = TYPE_COLORS[loc.type];
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      ctx.font = '12px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#000';
-      ctx.fillText(loc.icon, loc.x, loc.y);
-    });
-
-    // Клик на маркер
-    canvas.onclick = function(e) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const mx = (e.clientX - rect.left) * scaleX;
-      const my = (e.clientY - rect.top) * scaleY;
-
-      const hit = locs.find(l => Math.hypot(l.x - mx, l.y - my) < 18);
-      const popup = qs('#mapPopup');
-      if (hit) {
-        popup.innerHTML = `
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-            <div style="font-size:15px;font-weight:700;margin-bottom:4px">${hit.icon} ${hit.name}</div>
-            <button onclick="document.getElementById('mapPopup').style.display='none'" style="background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:0 4px;line-height:1">✕</button>
-          </div>
-          <div style="font-size:11px;color:${TYPE_COLORS[hit.type]};margin-bottom:6px;text-transform:uppercase;font-weight:600">${TYPE_LABELS[hit.type]}</div>
-          <div style="font-size:12px;color:var(--text2);line-height:1.4">${hit.desc}</div>`;
-        
-        // Позиция popup с проверкой границ контейнера
-        const containerWidth = canvas.parentElement.clientWidth;
-        let px = (hit.x / scaleX) + 12;
-        if (px + 220 > containerWidth) {
-          px = Math.max(10, (hit.x / scaleX) - 230);
-        }
-        const py = Math.max(10, (hit.y / scaleY) - 50);
-        popup.style.left = px + 'px';
-        popup.style.top = py + 'px';
-        popup.style.display = 'block';
-      } else {
-        popup.style.display = 'none';
-      }
-    };
-  }
-
-  function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
   }
 
   // ─── ФОКУСИРОВКА НА ЦЕЛИ КАРТЫ ─────────────────────────────
@@ -818,8 +804,8 @@
             </div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="sub-tab active" onclick="window._showOnSchematic('${loc.name}', ${loc.cx}, ${loc.cy})" style="font-size:12.5px;padding:8px 14px">
-              ⚡ Маяк на схеме
+            <button class="sub-tab active" onclick="window._setMapMode('schematic'); window._filterGpsLocations('${loc.name.split(' (')[0]}');" style="font-size:12.5px;padding:8px 14px">
+              🧭 Найти в GPS-каталоге
             </button>
             <button class="sub-tab" onclick="document.getElementById('mapTargetSpotlight').style.display='none'" style="font-size:12px;padding:8px 12px">
               ✕ Закрыть
@@ -861,54 +847,6 @@
   };
 
   window._jumpToMapSpotlight = window._jumpToMap;
-
-  window._showOnSchematic = function(name, cx, cy) {
-    window._setMapMode('schematic');
-    setTimeout(() => {
-      const canvas = qs('#palworldMap');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      let radius = 14;
-      let alpha = 1.0;
-      let count = 0;
-      const pulseInterval = setInterval(() => {
-        initMapCanvas();
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(230, 126, 34, ${alpha})`;
-        ctx.lineWidth = 4;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius + 8, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(0, 242, 254, ${alpha * 0.8})`;
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-
-        radius += 2.5;
-        alpha -= 0.07;
-        count++;
-        if (count > 25) {
-          clearInterval(pulseInterval);
-          initMapCanvas();
-        }
-      }, 40);
-
-      const popup = qs('#mapPopup');
-      if (popup) {
-        popup.innerHTML = `
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-            <div style="font-size:15px;font-weight:700;margin-bottom:4px">🎯 ${name}</div>
-            <button onclick="document.getElementById('mapPopup').style.display='none'" style="background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:0 4px;line-height:1">✕</button>
-          </div>
-          <div style="font-size:12px;color:var(--text2);margin-top:4px">Точка цели отмечена пульсирующим маяком!</div>
-        `;
-        popup.style.left = Math.min(cx, 400) + 'px';
-        popup.style.top = Math.max(10, cy - 40) + 'px';
-        popup.style.display = 'block';
-      }
-    }, 100);
-  };
 
   // ══════════════════════════════════════════════════════════
   //  3. КАЛЬКУЛЯТОР ЕДЫ
