@@ -431,10 +431,10 @@ function palImgTag(nameOrEng, size, alt, extraStyle) {
   const style = 'width:' + size + 'px;height:' + size + 'px;min-width:' + size + 'px;border-radius:10px;object-fit:cover;background:#161b22;border:1px solid rgba(255,255,255,0.08);box-shadow:0 2px 8px rgba(0,0,0,0.35);' + (extraStyle || '');
 
   if (!url) {
-    return '<img src="' + fallbackSvg + '" alt="' + (alt || nameOrEng || '') + '" style="' + style + '" loading="lazy">';
+    return '<img src="' + fallbackSvg + '" alt="' + (alt || nameOrEng || '') + '" style="' + style + '" loading="lazy" referrerpolicy="no-referrer">';
   }
 
-  return '<img src="' + url + '" alt="' + (alt || nameOrEng || '') + '" style="' + style + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + fallbackSvg + '\'">';
+  return '<img src="' + url + '" alt="' + (alt || nameOrEng || '') + '" style="' + style + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=\'' + fallbackSvg + '\'">';
 }
 
 if (typeof window !== 'undefined') {
