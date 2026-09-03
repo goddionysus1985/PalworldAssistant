@@ -92,14 +92,15 @@
 
   // --- ПОИСК -----------------------------------------------
   function buildSearchIndex() {
+    initAllTipsData();
     const idx = [];
 
-    DATA.beginnerTips.forEach(t => idx.push({ title: t.title, text: t.text, section: 'home', label: '🏠 Начало', id: t.id }));
-    DATA.mechanics.forEach(t => idx.push({ title: t.title, text: t.text, section: 'mechanics', label: '🔧 Механики', id: t.id }));
+    if (DATA.allTips) {
+      DATA.allTips.forEach(t => idx.push({ title: t.title, text: t.text, section: 'tips', label: '💡 Совет', id: t.id }));
+    }
     DATA.basePals.forEach(p => idx.push({ title: p.name + ' (' + p.eng + ')', text: p.tip + ' ' + p.where, section: 'base', label: '🏡 База', id: p.id }));
     DATA.combatPals.forEach(p => idx.push({ title: p.name + ' (' + p.eng + ')', text: p.tip, section: 'combat', label: '⚔️ Боёвка', id: p.id }));
     DATA.passives.forEach(p => idx.push({ title: p.name + ' (' + p.eng + ')', text: p.effect + ' ' + p.tip, section: 'passives', label: '✨ Пассивки', id: p.id }));
-    DATA.lifehacks.forEach(h => idx.push({ title: h.title, text: h.text, section: 'lifehacks', label: '💡 Лайфхаки', id: h.id }));
     DATA.breeding.forEach(b => idx.push({ title: b.title, text: b.text, section: 'breeding', label: '🧬 Разведение', id: b.id }));
     DATA.endgame.forEach(e => idx.push({ title: e.title, text: e.text, section: 'endgame', label: '🗺️ Контент', id: e.id }));
 
@@ -203,6 +204,177 @@
         <p>${t.text}</p>
       </div>
     `).join('');
+  }
+
+  // --- RENDER: ALL TIPS (ВКЛАДКА «ВСЕ СОВЕТЫ») -------------
+  let activeTipCat = 'all';
+  let tipSearchQuery = '';
+
+  function initAllTipsData() {
+    if (DATA.allTips) return;
+    DATA.allTips = [
+      ...DATA.beginnerTips.map(t => ({ ...t, cat: 'beginner', catName: 'Старт', level: t.level || 'beginner' })),
+      ...DATA.mechanics.map(t => ({ ...t, cat: 'mechanics', catName: 'Механики', level: t.level || 'intermediate' })),
+      ...DATA.lifehacks.map(t => ({ ...t, cat: 'lifehacks', catName: 'Лайфхаки', level: t.level || 'intermediate' })),
+      ...DATA.endgame.map(t => ({ ...t, cat: 'endgame', catName: 'Эндгейм', level: t.level || 'advanced' })),
+      {
+        id: 'tip_base_opt',
+        title: 'Идеальное зонирование базы',
+        icon: '🏗️',
+        cat: 'base',
+        catName: 'База',
+        level: 'intermediate',
+        tags: ['база', 'зонирование', 'оптимизация'],
+        text: 'Располагайте сундуки прямо около станков и полей, а не в общем хранилище в углу базы. Палы тратят 70% времени на ходьбу — ближайший ящик ускорит производство в разы.'
+      },
+      {
+        id: 'tip_breed_cake',
+        title: 'Автоматизация Тортов для скрещивания',
+        icon: '🎂',
+        cat: 'breeding',
+        catName: 'Разведение',
+        level: 'intermediate',
+        tags: ['разведение', 'торт', 'ранчо'],
+        text: 'Торт не портится в сундуке фермы разведения! Поставьте на Ранчо палов Бигарде (Мёд), Моззарину (Молоко), Чикипи (Яйца). На авто-фермах сажайте Пшеницу и Ягоды с палами Лилин и Джормунтид.'
+      },
+      {
+        id: 'tip_combat_elements',
+        title: 'Элементальное покрытие боевого отряда',
+        icon: '🔥',
+        cat: 'combat',
+        catName: 'Боёвка',
+        level: 'beginner',
+        tags: ['бой', 'стихии', 'отряд'],
+        text: 'Берите в команду минимум 3 разные стихии: Огонь (против Льда/Травы), Электро (против Воды), Дракон (против Тьмы) и Земля (против Электро). Это даёт стабильный бонус ×1.5 урона по 95% боссов.'
+      },
+      {
+        id: 'tip_san_hotspring',
+        title: 'Лечение депрессии и падения SAN',
+        icon: '♨️',
+        cat: 'base',
+        catName: 'База',
+        level: 'beginner',
+        tags: ['SAN', 'рассудок', 'база'],
+        text: 'Если пал получил депрессию — примените Низкосортные медикаменты через меню инвентаря. Чтобы SAN не падал — постройте Улучшенный горячий источник и кормите палов Салатом (даёт +30% к скорости работы).'
+      },
+      {
+        id: 'tip_legend_sphere',
+        title: '100% шанс поимки редких палов',
+        icon: '🔮',
+        cat: 'endgame',
+        catName: 'Эндгейм',
+        level: 'advanced',
+        tags: ['сферы', 'поимка', 'легенды'],
+        text: 'Для легендарных боссов Lv50 (Джетрагон, Фросталлион, Некромус) сбивайте HP ниже 5%, накладывайте Заморозку или Шок и бросайте Легендарную сферу строго в спину пала (бонус Backstab +30%).'
+      },
+      {
+        id: 'tip_glider_speed',
+        title: 'Сверхскоростной полёт через Крюк + Глайдер',
+        icon: '🚀',
+        cat: 'lifehacks',
+        catName: 'Лайфхаки',
+        level: 'intermediate',
+        tags: ['лайфхак', 'передвижение', 'глайдер'],
+        text: 'Выстрелите крюком-кошкой в землю перед собой. В момент максимального разгона подтягивания прыгайте и раскрывайте Глайдер (или используйте Галеклава). Высокая скорость рывка сохранится на всю дальность полёта.'
+      },
+      {
+        id: 'tip_gold_salad',
+        title: 'Бесконечное золото на продаже Салата',
+        icon: '💰',
+        cat: 'lifehacks',
+        catName: 'Золото',
+        level: 'intermediate',
+        tags: ['золото', 'торговля', 'салат'],
+        text: 'Ферма Салата приносит тысячи единиц еды. Продавайте излишки любому торговцу в Деревне за сотни тысяч золота, а на полученные деньги покупайте у торговца кости, масло палов и боеприпасы.'
+      },
+      {
+        id: 'tip_passives_inherit',
+        title: 'Золотая четвёрка пассивок для боёвки',
+        icon: '✨',
+        cat: 'breeding',
+        catName: 'Разведение',
+        level: 'advanced',
+        tags: ['пассивки', 'боёвка', 'селекция'],
+        text: 'Идеальная сборка любого боевого пала: Легенда (+20% АТК), Мышцеголов (+30% АТК), Яростный (+20% АТК) и стихийный перк (например, Повелитель пламени / Владыка тьмы +20%). Суммарный урон вырастает на +90%!'
+      }
+    ];
+  }
+
+  function renderAllTips() {
+    initAllTipsData();
+    const container = document.getElementById('all-tips-container');
+    if (!container) return;
+
+    const filtered = DATA.allTips.filter(t => {
+      const matchCat = (activeTipCat === 'all') ||
+        (activeTipCat === 'beginner' && t.level === 'beginner') ||
+        (activeTipCat === 'intermediate' && t.level === 'intermediate') ||
+        (activeTipCat === 'advanced' && t.level === 'advanced') ||
+        (t.cat === activeTipCat);
+
+      if (!matchCat) return false;
+
+      if (!tipSearchQuery) return true;
+      const q = tipSearchQuery.toLowerCase();
+      return t.title.toLowerCase().includes(q) || t.text.toLowerCase().includes(q) || (t.tags && t.tags.some(tag => tag.toLowerCase().includes(q)));
+    });
+
+    const countEl = document.getElementById('tipsCountAll');
+    if (countEl) countEl.textContent = DATA.allTips.length;
+
+    if (!filtered.length) {
+      container.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text2);background:var(--bg2);border-radius:12px;border:1px dashed var(--border)">
+          <div style="font-size:32px;margin-bottom:8px">🔍</div>
+          <div style="font-size:16px;font-weight:700">Ничего не найдено</div>
+          <div style="font-size:13px;margin-top:4px">Попробуйте изменить категорию или поисковый запрос</div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = filtered.map(t => {
+      const lvlClass = t.level === 'advanced' ? 'badge-advanced' : t.level === 'intermediate' ? 'badge-intermediate' : 'badge-beginner';
+      const lvlText  = t.level === 'advanced' ? 'Опытный' : t.level === 'intermediate' ? 'Средний' : 'Новичок';
+      return `
+      <div class="card" data-level="${t.level}" data-id="${t.id}">
+        <span class="card-icon">${t.icon}</span>
+        <div class="level-row" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+          <span class="badge ${lvlClass}">${lvlText}</span>
+          <span class="badge" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:11px">${t.catName || 'Совет'}</span>
+        </div>
+        <h3 style="margin-top:8px">${t.title}</h3>
+        <p>${t.text}</p>
+        ${t.tags ? `
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
+          ${t.tags.map(tag => `<span style="font-size:11px;color:var(--text2)">#${tag}</span>`).join('')}
+        </div>` : ''}
+      </div>`;
+    }).join('');
+
+    if (typeof window.enhanceTextPalLinks === 'function') {
+      setTimeout(window.enhanceTextPalLinks, 60);
+    }
+  }
+
+  function initTipsEvents() {
+    const tipBtns = document.querySelectorAll('[data-tip-cat]');
+    tipBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tipBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeTipCat = btn.dataset.tipCat;
+        renderAllTips();
+      });
+    });
+
+    const searchInput = document.getElementById('tipsSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', e => {
+        tipSearchQuery = e.target.value.trim();
+        renderAllTips();
+      });
+    }
   }
 
   // --- RENDER: MECHANICS ------------------------------------
@@ -541,6 +713,8 @@
     renderLifehacks();
     renderBreeding();
     renderEndgame();
+    renderAllTips();
+    initTipsEvents();
     initBaseJobFilters();
     initElementAdvisor();
     switchCategory('guides', false);
