@@ -104,6 +104,16 @@
     DATA.breeding.forEach(b => idx.push({ title: b.title, text: b.text, section: 'breeding', label: '🧬 Разведение', id: b.id }));
     DATA.endgame.forEach(e => idx.push({ title: e.title, text: e.text, section: 'endgame', label: '🗺️ Контент', id: e.id }));
 
+    // Индексация мощных интерактивных инструментов
+    idx.push({ title: 'Отряд базы (Анализатор 15 слотов)', text: 'Оптимизатор отряда базы, проверка покрытия всех 12 профессий (огонь, полив, руда, посадка), рекомендации замен', section: 'base-analyzer', label: '🏰 Отряд базы', id: 'sec-base-analyzer' });
+    idx.push({ title: 'Калькулятор скрещивания палов', text: 'Подбор пар родителей, расчет детёныша, таблица уникальных комбинаций разведения', section: 'breeding-calc', label: '🧮 Калькулятор', id: 'sec-breeding-calc' });
+    idx.push({ title: 'Интерактивная карта и GPS навигатор', text: 'Координаты боссов, телепорты, карта MapGenie, шахты руды и угля, башни синдиката', section: 'map', label: '📍 Карта', id: 'sec-map' });
+    idx.push({ title: 'Справочник всех торговцев Палпагоса', text: 'Красные торговцы патронами, синие торговцы палами, чёрные торговцы контрабандисты, координаты и товары', section: 'merchants', label: '🛒 Торговцы', id: 'sec-merchants' });
+    idx.push({ title: 'Калькулятор еды для базы', text: 'Оптимальная еда для палов, салат, пицца, ягоды, восстановление SAN и сытости', section: 'food-calc', label: '🍽️ Еда', id: 'sec-food-calc' });
+    idx.push({ title: 'Таблица стихий и урона', text: 'Колесо стихий, слабости и сопротивления, контр-пики против огня, воды, травы, электричества, льда, дракона, тьмы', section: 'elements', label: '🔥 Стихии', id: 'sec-elements' });
+    idx.push({ title: 'Дерево технологий и очков древних технологий', text: 'Ключевые постройки, щиты, инкубатор, пистолет-гарпун, сбруя для палов', section: 'tech-tree', label: '📊 Технологии', id: 'sec-tech-tree' });
+    idx.push({ title: 'Фарм золота и монет', text: 'Лучшие способы заработка золота, ферма Мопаки, скупка патронов, гвозди и салат', section: 'gold', label: '💰 Золото', id: 'sec-gold' });
+
     return idx;
   }
 
@@ -718,7 +728,7 @@
     initBaseJobFilters();
     initElementAdvisor();
     switchCategory('guides', false);
-    switchTab('home');
+    switchTab('tips');
   }
 
   init();

@@ -68,10 +68,9 @@
 
   function switchAll(id) {
     const targetBtn = qs(`.tab-btn[data-tab="${id}"]`);
-    if (targetBtn && targetBtn.dataset.cat) {
-      if (typeof window._switchCategory === 'function') {
-        window._switchCategory(targetBtn.dataset.cat, false);
-      }
+    const activeCat = targetBtn && targetBtn.dataset.cat ? targetBtn.dataset.cat : '';
+    if (activeCat && typeof window._switchCategory === 'function') {
+      window._switchCategory(activeCat, false);
     }
 
     qsa('.tab-btn').forEach(b => {
@@ -84,7 +83,7 @@
 
     // Синхронизация активной ссылки в хедере
     qsa('.header-link').forEach(link => {
-      const isHeaderActive = link.dataset.headTab === id;
+      const isHeaderActive = link.dataset.headTab === id || (link.dataset.headCat && link.dataset.headCat === activeCat);
       link.classList.toggle('active', isHeaderActive);
       if (isHeaderActive) {
         link.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });

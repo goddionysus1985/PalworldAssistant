@@ -35,15 +35,11 @@
 
     <!-- Ссылки на разделы в хедере -->
     <nav class="header-nav" aria-label="Быстрый переход по разделам">
-      <a href="#home" class="header-link active" data-head-cat="guides" data-head-tab="home">📖 Гайды</a>
-      <a href="#tips" class="header-link" data-head-cat="guides" data-head-tab="tips">💡 Все советы</a>
-      <a href="#base" class="header-link" data-head-cat="pals" data-head-tab="base">🏡 База</a>
-      <a href="#base-analyzer" class="header-link" data-head-cat="pals" data-head-tab="base-analyzer">🏰 Отряд базы</a>
-      <a href="#combat" class="header-link" data-head-cat="pals" data-head-tab="combat">⚔️ Боёвка</a>
-      <a href="#breeding-calc" class="header-link" data-head-cat="tools" data-head-tab="breeding-calc">🧮 Калькулятор</a>
-      <a href="#map" class="header-link" data-head-cat="tools" data-head-tab="map">📍 Карта</a>
-      <a href="#merchants" class="header-link" data-head-cat="tools" data-head-tab="merchants">🛒 Торговцы</a>
-      <a href="#tech-tree" class="header-link" data-head-cat="progression" data-head-tab="tech-tree">📈 Развитие</a>
+      <a href="#tips" class="header-link active" data-head-cat="guides" data-head-tab="tips">💡 База знаний</a>
+      <a href="#base-analyzer" class="header-link" data-head-cat="base" data-head-tab="base-analyzer">🏡 База</a>
+      <a href="#breeding-calc" class="header-link" data-head-cat="breeding" data-head-tab="breeding-calc">🧬 Разведение</a>
+      <a href="#elements" class="header-link" data-head-cat="combat" data-head-tab="elements">⚔️ Боёвка</a>
+      <a href="#map" class="header-link" data-head-cat="map" data-head-tab="map">📍 Карта & Торговцы</a>
     </nav>
 
     <!-- Поиск -->
@@ -68,47 +64,50 @@
 <div id="searchResults"></div>
 
 <!-- =========================================================
-     ГЛАВНЫЕ КАТЕГОРИИ (ЧИСТЫЙ РЕЖИМ)
+     ГЛАВНЫЕ КАТЕГОРИИ (ИНТУИТИВНЫЕ ХАБЫ)
      ========================================================= -->
 <div class="category-bar">
   <div class="category-inner">
-    <button class="cat-btn active" data-cat="guides"><span class="cat-emoji">📖</span> Гайды</button>
-    <button class="cat-btn" data-cat="pals"><span class="cat-emoji">🐾</span> Палы</button>
-    <button class="cat-btn" data-cat="tools"><span class="cat-emoji">🛠️</span> Инструменты</button>
-    <button class="cat-btn" data-cat="progression"><span class="cat-emoji">📈</span> Развитие</button>
+    <button class="cat-btn active" data-cat="guides"><span class="cat-emoji">💡</span> База знаний</button>
+    <button class="cat-btn" data-cat="base"><span class="cat-emoji">🏡</span> База</button>
+    <button class="cat-btn" data-cat="breeding"><span class="cat-emoji">🧬</span> Разведение</button>
+    <button class="cat-btn" data-cat="combat"><span class="cat-emoji">⚔️</span> Боёвка</button>
+    <button class="cat-btn" data-cat="map"><span class="cat-emoji">📍</span> Карта & Торговцы</button>
   </div>
 </div>
 
 <!-- =========================================================
-     ВКЛАДКИ НАВИГАЦИИ (СГРУППИРОВАННЫЕ)
+     ВКЛАДКИ НАВИГАЦИИ (СГРУППИРОВАННЫЕ ПО ТЕМАТИКЕ)
      ========================================================= -->
 <nav class="tabs-bar">
   <div class="tabs-inner">
-    <!-- Категория: Гайды -->
-    <button class="tab-btn active" data-tab="home" data-cat="guides"><span class="tab-emoji">🏠</span> Главная</button>
-    <button class="tab-btn" data-tab="tips" data-cat="guides"><span class="tab-emoji">💡</span> Все советы</button>
+    <!-- 1. База знаний & Советы (активна по умолчанию) -->
+    <button class="tab-btn active" data-tab="tips" data-cat="guides"><span class="tab-emoji">💡</span> Все советы (35+)</button>
+    <button class="tab-btn" data-tab="home" data-cat="guides"><span class="tab-emoji">🏠</span> Обзор и старт</button>
+    <button class="tab-btn" data-tab="tech-tree" data-cat="guides"><span class="tab-emoji">📊</span> Технологии</button>
+    <button class="tab-btn" data-tab="gold" data-cat="guides"><span class="tab-emoji">💰</span> Золото и сферы</button>
     <button class="tab-btn" data-tab="mechanics" data-cat="guides"><span class="tab-emoji">🔧</span> Механики</button>
     <button class="tab-btn" data-tab="endgame" data-cat="guides"><span class="tab-emoji">🗺️</span> Эндгейм</button>
 
-    <!-- Категория: Палы -->
-    <button class="tab-btn" data-tab="base" data-cat="pals"><span class="tab-emoji">🏡</span> База</button>
-    <button class="tab-btn" data-tab="base-analyzer" data-cat="pals"><span class="tab-emoji">🏰</span> Отряд базы</button>
-    <button class="tab-btn" data-tab="combat" data-cat="pals"><span class="tab-emoji">⚔️</span> Боёвка</button>
-    <button class="tab-btn" data-tab="passives" data-cat="pals"><span class="tab-emoji">✨</span> Пассивки</button>
-    <button class="tab-btn" data-tab="bosses" data-cat="pals"><span class="tab-emoji">🎯</span> Боссы</button>
+    <!-- 2. База и автоматизация -->
+    <button class="tab-btn" data-tab="base-analyzer" data-cat="base"><span class="tab-emoji">🏰</span> Отряд базы (15 палов)</button>
+    <button class="tab-btn" data-tab="base" data-cat="base"><span class="tab-emoji">👷</span> Лучшие рабочие палы</button>
+    <button class="tab-btn" data-tab="food-calc" data-cat="base"><span class="tab-emoji">🍽️</span> Калькулятор еды</button>
+    <button class="tab-btn" data-tab="base-planner" data-cat="base"><span class="tab-emoji">🏗️</span> Планировщик базы</button>
 
-    <!-- Категория: Инструменты -->
-    <button class="tab-btn" data-tab="breeding-calc" data-cat="tools"><span class="tab-emoji">🧮</span> Калькулятор</button>
-    <button class="tab-btn" data-tab="map" data-cat="tools"><span class="tab-emoji">📍</span> Карта</button>
-    <button class="tab-btn" data-tab="merchants" data-cat="tools"><span class="tab-emoji">🛒</span> Торговцы</button>
-    <button class="tab-btn" data-tab="food-calc" data-cat="tools"><span class="tab-emoji">🍽️</span> Еда</button>
-    <button class="tab-btn" data-tab="base-planner" data-cat="tools"><span class="tab-emoji">🏗️</span> Планировщик</button>
+    <!-- 3. Разведение и селекция -->
+    <button class="tab-btn" data-tab="breeding-calc" data-cat="breeding"><span class="tab-emoji">🧮</span> Калькулятор скрещивания</button>
+    <button class="tab-btn" data-tab="passives" data-cat="breeding"><span class="tab-emoji">✨</span> Пассивные навыки</button>
+    <button class="tab-btn" data-tab="breeding" data-cat="breeding"><span class="tab-emoji">🥚</span> Инкубация яиц</button>
 
-    <!-- Категория: Развитие -->
-    <button class="tab-btn" data-tab="tech-tree" data-cat="progression"><span class="tab-emoji">📊</span> Технологии</button>
-    <button class="tab-btn" data-tab="breeding" data-cat="progression"><span class="tab-emoji">🧬</span> Разведение</button>
-    <button class="tab-btn" data-tab="elements" data-cat="progression"><span class="tab-emoji">🔥</span> Стихии</button>
-    <button class="tab-btn" data-tab="gold" data-cat="progression"><span class="tab-emoji">💰</span> Золото</button>
+    <!-- 4. Боёвка и боссы -->
+    <button class="tab-btn" data-tab="elements" data-cat="combat"><span class="tab-emoji">🔥</span> Таблица стихий</button>
+    <button class="tab-btn" data-tab="combat" data-cat="combat"><span class="tab-emoji">⚔️</span> Боевой отряд</button>
+    <button class="tab-btn" data-tab="bosses" data-cat="combat"><span class="tab-emoji">🎯</span> 5 Башен и Альфа-боссы</button>
+
+    <!-- 5. Карта и локации -->
+    <button class="tab-btn" data-tab="map" data-cat="map"><span class="tab-emoji">🗺️</span> Интерактивная карта</button>
+    <button class="tab-btn" data-tab="merchants" data-cat="map"><span class="tab-emoji">🛒</span> Справочник торговцев</button>
   </div>
 </nav>
 
