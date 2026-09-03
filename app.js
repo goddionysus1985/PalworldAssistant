@@ -21,7 +21,13 @@
   // --- ВКЛАДКИ ---------------------------------------------
   function switchTab(id) {
     activeTab = id;
-    tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+    tabBtns.forEach(b => {
+      const isActive = b.dataset.tab === id;
+      b.classList.toggle('active', isActive);
+      if (isActive) {
+        b.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
+      }
+    });
     sections.forEach(s => s.classList.toggle('active', s.id === id));
     window.scrollTo({ top: 0, behavior: 'smooth' });
     closeSearch();

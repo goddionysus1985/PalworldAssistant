@@ -64,7 +64,13 @@
   }
 
   function switchAll(id) {
-    qsa('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+    qsa('.tab-btn').forEach(b => {
+      const isActive = b.dataset.tab === id;
+      b.classList.toggle('active', isActive);
+      if (isActive) {
+        b.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
+      }
+    });
     qsa('.section').forEach(s => s.classList.toggle('active', s.id === id));
     window.scrollTo({ top: 0, behavior: 'smooth' });
     // Ленивая инициализация карты
@@ -96,17 +102,17 @@
       <!-- ПРЯМОЙ: 2 пала → потомок -->
       <div id="breedForwardPanel">
         <div class="info-box">⚡ Формула: <code>Пол((Мощь1 + Мощь2 + 1) / 2)</code> → ищем ближайшего пала</div>
-        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:20px">
+        <div class="breed-inputs-grid">
           <div>
             <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">Родитель 1</label>
-            <select id="breedP1" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px">
+            <select id="breedP1" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:14px">
               <option value="">— Выбери пала —</option>${optionsHtml}
             </select>
           </div>
-          <div style="text-align:center;font-size:28px;color:var(--accent)">×</div>
+          <div style="text-align:center;font-size:28px;color:var(--accent);font-weight:700">×</div>
           <div>
             <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">Родитель 2</label>
-            <select id="breedP2" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px">
+            <select id="breedP2" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:14px">
               <option value="">— Выбери пала —</option>${optionsHtml}
             </select>
           </div>
@@ -301,16 +307,16 @@
         ).join('')}
       </div>
 
-      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
-        <div style="position:relative;flex-shrink:0">
+      <div class="map-container-flex">
+        <div style="position:relative;flex:1;min-width:280px;max-width:100%">
           <canvas id="palworldMap" width="660" height="470"
-            style="border:1px solid var(--border);border-radius:10px;cursor:crosshair;max-width:100%">
+            style="border:1px solid var(--border);border-radius:10px;cursor:crosshair;width:100%;height:auto;display:block">
           </canvas>
-          <div id="mapPopup" style="display:none;position:absolute;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;min-width:200px;max-width:240px;pointer-events:none;z-index:10;box-shadow:0 4px 20px rgba(0,0,0,.5)"></div>
+          <div id="mapPopup" style="display:none;position:absolute;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;min-width:200px;max-width:260px;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.6)"></div>
         </div>
 
         <!-- Легенда -->
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;min-width:180px">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;min-width:180px;flex-shrink:0">
           <div style="font-size:13px;font-weight:700;margin-bottom:12px">Легенда</div>
           ${Object.entries(TYPE_LABELS).map(([k,v]) => `
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -418,16 +424,24 @@
       const mx = (e.clientX - rect.left) * scaleX;
       const my = (e.clientY - rect.top) * scaleY;
 
-      const hit = locs.find(l => Math.hypot(l.x - mx, l.y - my) < 14);
+      const hit = locs.find(l => Math.hypot(l.x - mx, l.y - my) < 18);
       const popup = qs('#mapPopup');
       if (hit) {
         popup.innerHTML = `
-          <div style="font-size:16px;margin-bottom:4px">${hit.icon} <strong>${hit.name}</strong></div>
-          <div style="font-size:11px;color:${TYPE_COLORS[hit.type]};margin-bottom:6px;text-transform:uppercase">${TYPE_LABELS[hit.type]}</div>
-          <div style="font-size:12px;color:#8b949e">${hit.desc}</div>`;
-        // Позиция popup с учётом scale
-        const px = (hit.x / scaleX) + 14;
-        const py = Math.max(10, (hit.y / scaleY) - 40);
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="font-size:15px;font-weight:700;margin-bottom:4px">${hit.icon} ${hit.name}</div>
+            <button onclick="document.getElementById('mapPopup').style.display='none'" style="background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:0 4px;line-height:1">✕</button>
+          </div>
+          <div style="font-size:11px;color:${TYPE_COLORS[hit.type]};margin-bottom:6px;text-transform:uppercase;font-weight:600">${TYPE_LABELS[hit.type]}</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.4">${hit.desc}</div>`;
+        
+        // Позиция popup с проверкой границ контейнера
+        const containerWidth = canvas.parentElement.clientWidth;
+        let px = (hit.x / scaleX) + 12;
+        if (px + 220 > containerWidth) {
+          px = Math.max(10, (hit.x / scaleX) - 230);
+        }
+        const py = Math.max(10, (hit.y / scaleY) - 50);
         popup.style.left = px + 'px';
         popup.style.top = py + 'px';
         popup.style.display = 'block';
@@ -590,23 +604,24 @@
       </div>
       <div class="tip-box">🎯 Выбери здание слева → кликни на сетку для размещения. Правый клик убирает здание. Цель — минимизировать расстояния транспортировки.</div>
 
-      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+      <div class="bp-container-flex">
         <!-- Сайдбар зданий -->
-        <div style="width:200px;flex-shrink:0">
+        <div style="width:220px;flex-shrink:0">
           <div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Здания</div>
           <div id="bpSidebar" style="display:flex;flex-direction:column;gap:6px">${sidebar}</div>
           <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
-            <button onclick="window._bpClear()" style="width:100%;background:rgba(248,81,73,.12);border:1px solid rgba(248,81,73,.3);color:#f85149;border-radius:6px;padding:8px;cursor:pointer;font-size:13px">🗑️ Очистить всё</button>
+            <button id="bpEraseBtn" onclick="window._bpToggleErase()" style="width:100%;margin-bottom:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:9px;cursor:pointer;font-size:13px">🧹 Режим ластика: ВЫКЛ</button>
+            <button onclick="window._bpClear()" style="width:100%;background:rgba(248,81,73,.12);border:1px solid rgba(248,81,73,.3);color:#f85149;border-radius:6px;padding:9px;cursor:pointer;font-size:13px">🗑️ Очистить всё</button>
           </div>
           <div id="bpStats" style="margin-top:12px;font-size:12px;color:var(--text2)"></div>
         </div>
 
         <!-- Сетка -->
-        <div style="overflow:auto;flex:1">
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;flex:1;max-width:100%">
           <div id="bpGridWrap" style="position:relative;display:inline-block;border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:crosshair">
             <canvas id="bpCanvas" width="${GRID_W * CELL}" height="${GRID_H * CELL}"></canvas>
           </div>
-          <div style="font-size:11px;color:var(--text2);margin-top:8px">Размер базы: ${GRID_W}×${GRID_H} клеток</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:8px">Размер базы: ${GRID_W}×${GRID_H} клеток • 👆 На мобильном сдвигайте сетку пальцем</div>
         </div>
       </div>
     `;
@@ -638,7 +653,23 @@
     updateBpStats();
   };
 
+  let bpEraseMode = false;
+  window._bpToggleErase = function() {
+    bpEraseMode = !bpEraseMode;
+    const btn = qs('#bpEraseBtn');
+    if (btn) {
+      btn.textContent = bpEraseMode ? '🧹 Режим ластика: ВКЛ' : '🧹 Режим ластика: ВЫКЛ';
+      btn.style.background = bpEraseMode ? 'rgba(239,68,68,0.2)' : 'var(--bg3)';
+      btn.style.borderColor = bpEraseMode ? 'var(--danger)' : 'var(--border)';
+      btn.style.color = bpEraseMode ? '#f85149' : 'var(--text2)';
+    }
+  };
+
   function bpHandleClick(e) {
+    if (bpEraseMode) {
+      bpHandleRightClick(e);
+      return;
+    }
     if (!bpSelected) return;
     const b = BUILDINGS.find(b => b.id === bpSelected);
     if (!b) return;
