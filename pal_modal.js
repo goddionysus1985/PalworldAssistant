@@ -476,9 +476,11 @@
     }, 150);
   };
 
-  window._jumpToMap = function () {
+  window._jumpToMap = function (name) {
     closePalModal();
-    if (typeof window.switchAllExtended === 'function') {
+    if (typeof window._jumpToMapSpotlight === 'function') {
+      window._jumpToMapSpotlight(name);
+    } else if (typeof window.switchAllExtended === 'function') {
       window.switchAllExtended('map');
     }
   };

@@ -203,7 +203,7 @@ function renderMerchantsGuide() {
         </div>
 
         <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
-          <button class="sub-tab active" style="flex:1;padding:8px 12px;font-size:12px" onclick="if(typeof window.switchAllExtended==='function'){window.switchAllExtended('map')}">
+          <button class="sub-tab active" style="flex:1;padding:8px 12px;font-size:12px" onclick="window._jumpToMap('${m.name}')">
             📍 Показать на карте
           </button>
         </div>
