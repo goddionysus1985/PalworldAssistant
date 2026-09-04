@@ -108,6 +108,10 @@
       `<option value="${p.name}">${p.name} (${p.eng}) — Мощь: ${p.power}</option>`
     ).join('');
 
+    const datalistOptionsHtml = pals.map(p =>
+      `<option value="${p.name}">${p.name} (${p.eng}) — Мощь: ${p.power}</option>`
+    ).join('');
+
     sec.innerHTML = `
       <div class="section-header">
         <h2>🧮 Калькулятор разведения</h2>
@@ -119,21 +123,29 @@
         <button class="sub-tab" id="breedReverseBtn" onclick="window._breedMode('reverse')">🔍 Кто нужен для...?</button>
       </div>
 
+      <datalist id="breedingPalsList">${datalistOptionsHtml}</datalist>
+
       <!-- ПРЯМОЙ: 2 пала → потомок -->
       <div id="breedForwardPanel">
-        <div class="info-box">⚡ Формула: <code>Пол((Мощь1 + Мощь2 + 1) / 2)</code> → ищем ближайшего пала</div>
+        <div class="info-box">⚡ Формула: <code>Пол((Мощь1 + Мощь2 + 1) / 2)</code> → ищем ближайшего пала. Вводите имя пала или выбирайте из списка.</div>
         <div class="breed-inputs-grid">
           <div>
             <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">Родитель 1</label>
-            <select id="breedP1" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:14px">
-              <option value="">— Выбери пала —</option>${optionsHtml}
+            <input type="text" id="breedP1Search" list="breedingPalsList" placeholder="🔍 Введите имя (напр: Анубис)..." 
+              style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13.5px;margin-bottom:6px;box-sizing:border-box"
+              oninput="window._syncBreedSearch('breedP1', this.value)" autocomplete="off">
+            <select id="breedP1" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-size:13px">
+              <option value="">— или выбери из списка —</option>${optionsHtml}
             </select>
           </div>
           <div style="text-align:center;font-size:28px;color:var(--accent);font-weight:700">×</div>
           <div>
             <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">Родитель 2</label>
-            <select id="breedP2" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:14px">
-              <option value="">— Выбери пала —</option>${optionsHtml}
+            <input type="text" id="breedP2Search" list="breedingPalsList" placeholder="🔍 Введите имя (напр: Чикипи)..." 
+              style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13.5px;margin-bottom:6px;box-sizing:border-box"
+              oninput="window._syncBreedSearch('breedP2', this.value)" autocomplete="off">
+            <select id="breedP2" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-size:13px">
+              <option value="">— или выбери из списка —</option>${optionsHtml}
             </select>
           </div>
         </div>
@@ -142,11 +154,14 @@
 
       <!-- ОБРАТНЫЙ: цель → пары -->
       <div id="breedReversePanel" style="display:none">
-        <div class="info-box">🔍 Выбери желаемого потомка и узнай все возможные пары родителей</div>
-        <div style="margin-bottom:20px">
+        <div class="info-box">🔍 Введи или выбери желаемого потомка, чтобы увидеть все возможные пары родителей</div>
+        <div style="margin-bottom:20px;max-width:420px">
           <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">Желаемый потомок</label>
-          <select id="breedTarget" style="width:100%;max-width:400px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px">
-            <option value="">— Выбери цель —</option>${optionsHtml}
+          <input type="text" id="breedTargetSearch" list="breedingPalsList" placeholder="🔍 Введите имя потомка..." 
+            style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13.5px;margin-bottom:6px;box-sizing:border-box"
+            oninput="window._syncBreedSearch('breedTarget', this.value)" autocomplete="off">
+          <select id="breedTarget" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-size:13px">
+            <option value="">— или выбери из списка —</option>${optionsHtml}
           </select>
         </div>
         <div id="breedReverseResult"></div>
@@ -175,11 +190,51 @@
       </div>
     `;
 
-    // Слушатели для прямого расчёта
-    qs('#breedP1').addEventListener('change', calcBreedForward);
-    qs('#breedP2').addEventListener('change', calcBreedForward);
-    qs('#breedTarget').addEventListener('change', calcBreedReverse);
+    // Слушатели для прямого и обратного расчёта с синхронизацией полей ввода
+    qs('#breedP1').addEventListener('change', () => {
+      const s = qs('#breedP1Search');
+      if (s) s.value = qs('#breedP1').value;
+      calcBreedForward();
+    });
+    qs('#breedP2').addEventListener('change', () => {
+      const s = qs('#breedP2Search');
+      if (s) s.value = qs('#breedP2').value;
+      calcBreedForward();
+    });
+    qs('#breedTarget').addEventListener('change', () => {
+      const s = qs('#breedTargetSearch');
+      if (s) s.value = qs('#breedTarget').value;
+      calcBreedReverse();
+    });
   }
+
+  // Синхронизация поиска и выпадающих списков калькулятора скрещивания
+  window._syncBreedSearch = function(selectId, typedValue) {
+    const q = (typedValue || '').trim().toLowerCase();
+    const sel = qs('#' + selectId);
+    if (!sel) return;
+
+    if (!q) {
+      sel.value = '';
+      if (selectId === 'breedTarget') calcBreedReverse();
+      else calcBreedForward();
+      return;
+    }
+
+    const match = DATA_EXT.breedingPals.find(p =>
+      p.name.toLowerCase() === q ||
+      p.eng.toLowerCase() === q ||
+      p.name.toLowerCase().startsWith(q) ||
+      p.eng.toLowerCase().startsWith(q) ||
+      p.name.toLowerCase().includes(q)
+    );
+
+    if (match) {
+      sel.value = match.name;
+      if (selectId === 'breedTarget') calcBreedReverse();
+      else calcBreedForward();
+    }
+  };
 
   window._breedMode = function(mode) {
     const isForward = mode === 'forward';

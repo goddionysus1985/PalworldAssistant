@@ -18,7 +18,7 @@
       document.head.appendChild(m);
     }
   </script>
-  <link rel="stylesheet" href="styles.css?v=1.6.0" />
+  <link rel="stylesheet" href="styles.css?v=1.7.0" />
 </head>
 <body>
 
@@ -237,8 +237,13 @@
       📦 <strong>Совет по планировке:</strong> Ставь склад в центре базы, выбирай <strong>абсолютно ровный рельеф</strong> — иначе палы будут зависать. Используй несколько баз под разные задачи.
     </div>
 
-    <!-- Быстрый фильтр специалистов по работе -->
+    <!-- Поиск и фильтр специалистов по работе -->
     <div style="margin-bottom:18px">
+      <div style="margin-bottom:10px">
+        <input type="search" id="basePalSearchInput" placeholder="🔍 Найти рабочего пала по имени или профессии (например: Анубис, Огонь, Полив)..."
+          style="width:100%;padding:10px 14px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:13.5px;box-sizing:border-box"
+          oninput="window._filterBasePals(this.value)">
+      </div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Фильтр по специализации:</div>
       <div class="base-job-filters" style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="sub-tab active" data-job="all">Все (12)</button>
@@ -307,11 +312,18 @@
           <h3 style="margin:0;font-size:16px">Текущие рабочие вашей базы (<span id="rosterCount" style="color:var(--accent)">12 / 15</span>)</h3>
           <div style="font-size:12px;color:var(--text2);margin-top:2px">Добавляйте или убирайте палов, чтобы оценить производительность</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <select id="addPalSelect" style="padding:8px 12px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px">
-            <option value="">-- Выберите пала --</option>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div style="position:relative;min-width:210px">
+            <input type="text" id="addPalInput" list="rosterPalsDatalist" placeholder="🔍 Введите имя пала..."
+              style="width:100%;padding:9px 12px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13.5px;box-sizing:border-box"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();window._addRosterPal();}" autocomplete="off">
+            <datalist id="rosterPalsDatalist"></datalist>
+          </div>
+          <select id="addPalSelect" style="padding:9px 12px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;max-width:180px"
+            onchange="if(this.value){document.getElementById('addPalInput').value=this.value;}">
+            <option value="">или из списка ↓</option>
           </select>
-          <button class="sub-tab active" onclick="window._addRosterPal()" style="padding:8px 14px">+ Добавить</button>
+          <button class="sub-tab active" onclick="window._addRosterPal()" style="padding:9px 16px;font-weight:700;font-size:13px">+ Добавить</button>
         </div>
       </div>
       <div id="baseRosterSlots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
@@ -357,6 +369,12 @@
 
     <div class="warn-box">
       ⚠️ Пассивка <strong>«Бог разрушения»</strong> даёт огромный урон, но режет HP на 50%. Используй только если постоянно контролируешь бой и лечишь пала.
+    </div>
+
+    <div style="margin-bottom:18px">
+      <input type="search" id="combatPalSearchInput" placeholder="🔍 Найти боевого пала по имени или роли (например: Джетрагон, Тьма, Маунт, Танк)..."
+        style="width:100%;padding:10px 14px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:13.5px;box-sizing:border-box"
+        oninput="window._filterCombatPals(this.value)">
     </div>
 
     <div class="grid-3" id="combat-container">
@@ -413,6 +431,12 @@
 
     <div class="info-box">
       🎲 <strong>Как получить нужные пассивки:</strong> Через разведение — каждый родитель передаёт свои пассивки с определённым шансом. Пассивка «Легенда» встречается только у легендарных палов и передаётся через разведение.
+    </div>
+
+    <div style="margin-bottom:20px">
+      <input type="search" id="passivesSearchInput" placeholder="🔍 Найти пассивный навык (например: Легенда, Атака, Скорость, Заготовитель)..."
+        style="width:100%;padding:10px 14px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:13.5px;box-sizing:border-box"
+        oninput="window._filterPassives(this.value)">
     </div>
 
     <!-- Боевые -->
@@ -767,14 +791,14 @@
 <button id="backTop" title="Наверх">↑</button>
 
 <!-- Скрипты -->
-<script src="pal_images.js?v=1.6.0"></script>
-<script src="data.js?v=1.6.0"></script>
-<script src="data_extended.js?v=1.6.0"></script>
-<script src="merchants_data.js?v=1.6.0"></script>
-<script src="base_analyzer.js?v=1.6.0"></script>
-<script src="app.js?v=1.6.0"></script>
-<script src="app_extended.js?v=1.6.0"></script>
-<script src="pal_modal.js?v=1.6.0"></script>
+<script src="pal_images.js?v=1.7.0"></script>
+<script src="data.js?v=1.7.0"></script>
+<script src="data_extended.js?v=1.7.0"></script>
+<script src="merchants_data.js?v=1.7.0"></script>
+<script src="base_analyzer.js?v=1.7.0"></script>
+<script src="app.js?v=1.7.0"></script>
+<script src="app_extended.js?v=1.7.0"></script>
+<script src="pal_modal.js?v=1.7.0"></script>
 
 <!-- PWA Service Worker -->
 <script>

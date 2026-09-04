@@ -2,7 +2,7 @@
 //  PALWORLD ASSISTANT — Service Worker (PWA Offline Cache)
 // ============================================================
 
-const CACHE_NAME = 'pal-assistant-v1.6.0';
+const CACHE_NAME = 'pal-assistant-v1.7.0';
 
 const ASSETS_TO_CACHE = [
   './',

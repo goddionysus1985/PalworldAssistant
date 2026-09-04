@@ -90,10 +90,28 @@
     const countEl = document.getElementById('rosterCount');
     if (countEl) countEl.textContent = `${currentRoster.length} / 15`;
 
-    // Заполнение селектора добавления нового пала
+    // Заполнение селектора и datalist для быстрого ввода палов
     const palSelect = document.getElementById('addPalSelect');
+    const palsDatalist = document.getElementById('rosterPalsDatalist');
+    
+    // Собираем всех уникальных палов
+    const palsSet = new Set();
+    if (typeof RU_TO_ENG !== 'undefined') Object.keys(RU_TO_ENG).forEach(p => palsSet.add(p));
+    if (typeof PAL_DETAILS !== 'undefined') Object.keys(PAL_DETAILS).forEach(p => palsSet.add(p));
+    if (typeof DATA_EXT !== 'undefined' && DATA_EXT.breedingPals) DATA_EXT.breedingPals.forEach(p => palsSet.add(p.name));
+    const allPals = [...palsSet].sort((a, b) => a.localeCompare(b, 'ru'));
+
+    if (palsDatalist && palsDatalist.children.length === 0) {
+      allPals.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        const eng = (typeof RU_TO_ENG !== 'undefined' && RU_TO_ENG[p]) ? ` (${RU_TO_ENG[p]})` : '';
+        opt.label = `${p}${eng}`;
+        palsDatalist.appendChild(opt);
+      });
+    }
+
     if (palSelect && palSelect.options.length <= 1) {
-      const allPals = (typeof RU_TO_ENG !== 'undefined') ? Object.keys(RU_TO_ENG).sort() : [];
       allPals.forEach(p => {
         const opt = document.createElement('option');
         opt.value = p;
@@ -243,15 +261,61 @@
     }
   }
 
-  // Добавление пала
+  // Добавление пала (через ввод текста или выбор из списка)
   window._addRosterPal = function () {
+    const input = document.getElementById('addPalInput');
     const sel = document.getElementById('addPalSelect');
-    if (!sel || !sel.value) return;
+    let typed = input ? input.value.trim() : '';
+    let palToAdd = '';
+
+    // Если игрок написал имя пала в поле ввода
+    if (typed) {
+      const q = typed.toLowerCase();
+      // Поиск подходящего пала
+      const palsSet = new Set();
+      if (typeof RU_TO_ENG !== 'undefined') Object.keys(RU_TO_ENG).forEach(p => palsSet.add(p));
+      if (typeof PAL_DETAILS !== 'undefined') Object.keys(PAL_DETAILS).forEach(p => palsSet.add(p));
+      if (typeof DATA_EXT !== 'undefined' && DATA_EXT.breedingPals) DATA_EXT.breedingPals.forEach(p => palsSet.add(p.name));
+      const allPals = [...palsSet];
+
+      // 1) Точное совпадение
+      let match = allPals.find(p => p.toLowerCase() === q);
+      // 2) Совпадение по английскому названию
+      if (!match && typeof RU_TO_ENG !== 'undefined') {
+        const foundRu = Object.keys(RU_TO_ENG).find(ru => (RU_TO_ENG[ru] || '').toLowerCase() === q);
+        if (foundRu) match = foundRu;
+      }
+      // 3) Начинается с...
+      if (!match) {
+        match = allPals.find(p => p.toLowerCase().startsWith(q));
+      }
+      // 4) Содержит подстроку
+      if (!match) {
+        match = allPals.find(p => p.toLowerCase().includes(q));
+      }
+
+      palToAdd = match || typed;
+    } else if (sel && sel.value) {
+      palToAdd = sel.value;
+    }
+
+    if (!palToAdd) {
+      if (input) input.focus();
+      return;
+    }
+
     if (currentRoster.length >= 20) {
       alert('В отряде базы может быть максимум 20 палов.');
       return;
     }
-    currentRoster.push(sel.value);
+
+    currentRoster.push(palToAdd);
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+    if (sel) sel.value = '';
+
     renderRosterUI();
     auditBase();
   };

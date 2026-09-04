@@ -557,7 +557,29 @@
     `).join('');
   }
 
-  // --- БАЗА: ФИЛЬТР ПО ПРОФЕССИЯМ --------------------------
+  // --- БАЗА: ФИЛЬТР ПО ПРОФЕССИЯМ И ПОИСК -----------------
+  let activeBaseJob = 'all';
+  let activeBaseSearch = '';
+
+  function applyBaseFilter() {
+    const palCards = document.querySelectorAll('#base-container .pal-card');
+    palCards.forEach(card => {
+      const jobText = card.querySelector('.pal-job-name')?.textContent || '';
+      const palName = card.querySelector('.pal-name')?.textContent || '';
+      const palEng = card.querySelector('.pal-eng')?.textContent || '';
+      const palTip = card.querySelector('.pal-tip')?.textContent || '';
+
+      const matchJob = (activeBaseJob === 'all') || jobText.toLowerCase().includes(activeBaseJob.toLowerCase());
+      const matchSearch = !activeBaseSearch || 
+        palName.toLowerCase().includes(activeBaseSearch) ||
+        palEng.toLowerCase().includes(activeBaseSearch) ||
+        jobText.toLowerCase().includes(activeBaseSearch) ||
+        palTip.toLowerCase().includes(activeBaseSearch);
+
+      card.classList.toggle('hidden', !(matchJob && matchSearch));
+    });
+  }
+
   function initBaseJobFilters() {
     const jobBtns = document.querySelectorAll('.base-job-filters .sub-tab');
     if (!jobBtns.length) return;
@@ -565,20 +587,52 @@
       btn.addEventListener('click', () => {
         jobBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const selectedJob = btn.dataset.job;
-        const palCards = document.querySelectorAll('#base-container .pal-card');
-        palCards.forEach(card => {
-          if (selectedJob === 'all') {
-            card.classList.remove('hidden');
-          } else {
-            const jobText = card.querySelector('.pal-job-name')?.textContent || '';
-            const match = jobText.toLowerCase().includes(selectedJob.toLowerCase());
-            card.classList.toggle('hidden', !match);
-          }
-        });
+        activeBaseJob = btn.dataset.job;
+        applyBaseFilter();
       });
     });
   }
+
+  window._filterBasePals = function(q) {
+    activeBaseSearch = (q || '').trim().toLowerCase();
+    applyBaseFilter();
+  };
+
+  // --- БОЁВКА: ПОИСК БОЕВЫХ ПАЛОВ --------------------------
+  window._filterCombatPals = function(q) {
+    const lq = (q || '').trim().toLowerCase();
+    const cards = document.querySelectorAll('#combat-container .pal-card');
+    cards.forEach(card => {
+      const name = card.querySelector('.pal-name')?.textContent || '';
+      const eng = card.querySelector('.pal-eng')?.textContent || '';
+      const role = card.querySelector('.pal-role')?.textContent || '';
+      const tip = card.querySelector('.pal-tip')?.textContent || '';
+      const match = !lq ||
+        name.toLowerCase().includes(lq) ||
+        eng.toLowerCase().includes(lq) ||
+        role.toLowerCase().includes(lq) ||
+        tip.toLowerCase().includes(lq);
+      card.classList.toggle('hidden', !match);
+    });
+  };
+
+  // --- ПАССИВКИ: ПОИСК НАВЫКОВ -----------------------------
+  window._filterPassives = function(q) {
+    const lq = (q || '').trim().toLowerCase();
+    const cards = document.querySelectorAll('.passive-card');
+    cards.forEach(card => {
+      const name = card.querySelector('.passive-name')?.textContent || '';
+      const eng = card.querySelector('.passive-eng')?.textContent || '';
+      const effect = card.querySelector('.passive-effect')?.textContent || '';
+      const tip = card.querySelector('.passive-tip')?.textContent || '';
+      const match = !lq ||
+        name.toLowerCase().includes(lq) ||
+        eng.toLowerCase().includes(lq) ||
+        effect.toLowerCase().includes(lq) ||
+        tip.toLowerCase().includes(lq);
+      card.classList.toggle('hidden', !match);
+    });
+  };
 
   // --- СТИХИИ: ИНТЕРАКТИВНЫЙ ПОМОЩНИК ----------------------
   const ELEMENT_MATCHUPS = {
